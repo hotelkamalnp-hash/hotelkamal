@@ -1,10 +1,16 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import {defineConfig} from 'vite';
+import { fileURLToPath } from 'url';
+import { defineConfig } from 'vite';
+
+// Fix for __dirname when using "type": "module" in modern Vite environments
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default defineConfig(() => {
   return {
+    base: '/notekamal/', // 👈 Added this line so assets load correctly on GitHub Pages
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
