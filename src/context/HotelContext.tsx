@@ -22,6 +22,9 @@ import {
   BillItemLine,
   GuestRoomSession,
   CSRChatMessage,
+  HotelCoupon,
+  CouponDiscountType,
+  CouponServiceScope,
 } from '../types/hotel';
 import { convertPrice } from '../utils/theme';
 import { getSupabaseClient, testSupabaseConnection } from '../services/supabase';
@@ -33,11 +36,11 @@ import {
   INITIAL_GUEST_SESSIONS,
 } from '../services/restaurantBillingData';
 
-// Visual assets
-const HERO_IMAGE = '/src/assets/images/hero_hotel_exterior_1793848734140.jpg';
-const ROOM_DELUXE_IMAGE = '/src/assets/images/room_deluxe_suite_1793848735141.jpg';
-const ROOM_SUITE_IMAGE = '/src/assets/images/room_executive_himalayan_1793848733912.jpg';
-const AMENITY_ROOFTOP_IMAGE = '/src/assets/images/amenity_rooftop_dining_1793848735329.jpg';
+// Visual assets - bundled via Vite imports for GitHub Pages compatibility
+import HERO_IMAGE from '../assets/images/hero_hotel_exterior_1793848734140.jpg';
+import ROOM_DELUXE_IMAGE from '../assets/images/room_deluxe_suite_1793848735141.jpg';
+import ROOM_SUITE_IMAGE from '../assets/images/room_executive_himalayan_1793848733912.jpg';
+import AMENITY_ROOFTOP_IMAGE from '../assets/images/amenity_rooftop_dining_1793848735329.jpg';
 
 const INITIAL_ROOMS: Room[] = [
   {
@@ -324,9 +327,9 @@ const INITIAL_THEME: HotelThemeConfig = {
   rooftopDiningImage: AMENITY_ROOFTOP_IMAGE,
 
   // Supabase
-  supabaseUrl: '',
-  supabaseAnonKey: '',
-  supabaseConnected: false,
+  supabaseUrl: (import.meta.env.VITE_SUPABASE_URL as string) || '',
+  supabaseAnonKey: (import.meta.env.VITE_SUPABASE_ANON_KEY as string) || '',
+  supabaseConnected: Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY),
 };
 
 const INITIAL_STAFF: StaffUser[] = [
@@ -557,6 +560,69 @@ const INITIAL_AUDIT_LOGS: AuditLog[] = [
   },
 ];
 
+const INITIAL_COUPONS: HotelCoupon[] = [
+  {
+    id: 'cp-welcome15',
+    code: 'WELCOME2026',
+    description: '15% Off all Room Stays & Dining at Kamal Hotel',
+    discountType: 'percentage',
+    discountValue: 15,
+    applicableTo: 'all',
+    minSpendUSD: 40,
+    validFrom: '2025-01-01',
+    validUntil: '2026-12-31',
+    usageLimit: 500,
+    timesUsed: 42,
+    isActive: true,
+    createdBy: 'Subash Sharma (Super Admin)',
+  },
+  {
+    id: 'cp-rooftop10',
+    code: 'ROOFTOP10',
+    description: '$10 USD Flat Voucher for Rooftop Garden Dining',
+    discountType: 'fixed_amount',
+    discountValue: 10,
+    applicableTo: 'dining',
+    minSpendUSD: 25,
+    validFrom: '2025-01-01',
+    validUntil: '2026-12-31',
+    usageLimit: 200,
+    timesUsed: 19,
+    isActive: true,
+    createdBy: 'Chef Subash (Head Chef)',
+  },
+  {
+    id: 'cp-himalayanvip',
+    code: 'HIMALAYANVIP',
+    description: '20% Exclusive Privilege on Executive & Presidential Suites',
+    discountType: 'percentage',
+    discountValue: 20,
+    applicableTo: 'rooms',
+    minSpendUSD: 100,
+    maxDiscountUSD: 150,
+    validFrom: '2025-01-01',
+    validUntil: '2026-12-31',
+    usageLimit: 100,
+    timesUsed: 14,
+    isActive: true,
+    createdBy: 'General Manager',
+  },
+  {
+    id: 'cp-kamal5',
+    code: 'KAMAL5',
+    description: '5% Instant Direct Website Booking Promo',
+    discountType: 'percentage',
+    discountValue: 5,
+    applicableTo: 'all',
+    validFrom: '2025-01-01',
+    validUntil: '2027-12-31',
+    usageLimit: 1000,
+    timesUsed: 88,
+    isActive: true,
+    createdBy: 'Marketing Team',
+  },
+];
+
 interface NotificationToast {
   id: string;
   title: string;
@@ -676,6 +742,15 @@ interface HotelContextType {
   // Toasts
   showToast: (title: string, message: string, type?: 'success' | 'info' | 'warning' | 'error') => void;
   removeToast: (id: string) => void;
+
+  // Coupons & Promo Vouchers
+  coupons: HotelCoupon[];
+  addCoupon: (coupon: Omit<HotelCoupon, 'id' | 'timesUsed'>) => void;
+  updateCoupon: (id: string, updates: Partial<HotelCoupon>) => void;
+  deleteCoupon: (id: string) => void;
+  toggleCouponStatus: (id: string) => void;
+  validateAndApplyCoupon: (code: string, subtotalUSD: number, serviceScope?: CouponServiceScope) => { valid: boolean; discountAmountUSD: number; coupon?: HotelCoupon; message: string };
+  redeemCoupon: (code: string) => boolean;
 }
 
 const HotelContext = createContext<HotelContextType | undefined>(undefined);
@@ -782,6 +857,16 @@ export const HotelProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [toasts, setToasts] = useState<NotificationToast[]>([]);
   const [selectedRoomForBooking, setSelectedRoomForBooking] = useState<Room | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState<boolean>(false);
+
+  // Coupons & Promo Vouchers state
+  const [coupons, setCoupons] = useState<HotelCoupon[]>(() => {
+    const saved = localStorage.getItem('kamal_hotel_coupons_v1');
+    return saved ? JSON.parse(saved) : INITIAL_COUPONS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('kamal_hotel_coupons_v1', JSON.stringify(coupons));
+  }, [coupons]);
 
   // Sync dark mode class
   useEffect(() => {
@@ -1839,6 +1924,113 @@ export const HotelProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     showToast('VoIP Call Ended', 'Intercom session closed.', 'info');
   };
 
+  // ----------------- COUPONS & PROMO VOUCHERS -----------------
+  const addCoupon = (newCp: Omit<HotelCoupon, 'id' | 'timesUsed'>) => {
+    const coupon: HotelCoupon = {
+      ...newCp,
+      id: 'cp-' + Math.random().toString(36).substring(2, 9),
+      timesUsed: 0,
+      code: newCp.code.trim().toUpperCase(),
+    };
+    setCoupons((prev) => [coupon, ...prev]);
+    addAuditLog('Created Coupon ' + coupon.code, 'rates', `Added coupon ${coupon.code} with value ${coupon.discountValue}${coupon.discountType === 'percentage' ? '%' : ' USD'}`);
+    showToast('Coupon Created', `Promo code "${coupon.code}" is now active.`, 'success');
+  };
+
+  const updateCoupon = (id: string, updates: Partial<HotelCoupon>) => {
+    setCoupons((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, ...updates, code: updates.code ? updates.code.trim().toUpperCase() : c.code } : c))
+    );
+    showToast('Coupon Updated', 'Promo code parameters updated successfully.', 'info');
+  };
+
+  const deleteCoupon = (id: string) => {
+    setCoupons((prev) => prev.filter((c) => c.id !== id));
+    showToast('Coupon Deleted', 'Coupon removed from active system.', 'warning');
+  };
+
+  const toggleCouponStatus = (id: string) => {
+    setCoupons((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, isActive: !c.isActive } : c))
+    );
+  };
+
+  const validateAndApplyCoupon = (
+    code: string,
+    subtotalUSD: number,
+    serviceScope: CouponServiceScope = 'all'
+  ) => {
+    const cleanCode = code.trim().toUpperCase();
+    if (!cleanCode) {
+      return { valid: false, discountAmountUSD: 0, message: 'Please enter a coupon or promo code.' };
+    }
+
+    const coupon = coupons.find((c) => c.code === cleanCode);
+    if (!coupon) {
+      return { valid: false, discountAmountUSD: 0, message: `Promo code "${cleanCode}" is invalid or does not exist.` };
+    }
+
+    if (!coupon.isActive) {
+      return { valid: false, discountAmountUSD: 0, message: `Promo code "${cleanCode}" is currently inactive.` };
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    if (coupon.validFrom && today < coupon.validFrom) {
+      return { valid: false, discountAmountUSD: 0, message: `Promo code "${cleanCode}" is not yet active.` };
+    }
+    if (coupon.validUntil && today > coupon.validUntil) {
+      return { valid: false, discountAmountUSD: 0, message: `Promo code "${cleanCode}" expired on ${coupon.validUntil}.` };
+    }
+
+    if (coupon.usageLimit && coupon.timesUsed >= coupon.usageLimit) {
+      return { valid: false, discountAmountUSD: 0, message: `Promo code "${cleanCode}" has reached its maximum redemptions.` };
+    }
+
+    if (coupon.applicableTo !== 'all' && serviceScope !== 'all' && coupon.applicableTo !== serviceScope) {
+      return { valid: false, discountAmountUSD: 0, message: `Coupon "${cleanCode}" is only applicable to ${coupon.applicableTo.replace('_', ' ')}.` };
+    }
+
+    if (coupon.minSpendUSD && subtotalUSD < coupon.minSpendUSD) {
+      return {
+        valid: false,
+        discountAmountUSD: 0,
+        message: `Minimum spend of $${coupon.minSpendUSD.toFixed(2)} required for "${cleanCode}".`,
+      };
+    }
+
+    let discountAmountUSD = 0;
+    if (coupon.discountType === 'percentage') {
+      discountAmountUSD = (subtotalUSD * coupon.discountValue) / 100;
+      if (coupon.maxDiscountUSD && discountAmountUSD > coupon.maxDiscountUSD) {
+        discountAmountUSD = coupon.maxDiscountUSD;
+      }
+    } else {
+      discountAmountUSD = Math.min(subtotalUSD, coupon.discountValue);
+    }
+
+    return {
+      valid: true,
+      discountAmountUSD: Math.round(discountAmountUSD * 100) / 100,
+      coupon,
+      message: `Coupon "${coupon.code}" applied! You saved $${discountAmountUSD.toFixed(2)} (${coupon.description}).`,
+    };
+  };
+
+  const redeemCoupon = (code: string) => {
+    const cleanCode = code.trim().toUpperCase();
+    let found = false;
+    setCoupons((prev) =>
+      prev.map((c) => {
+        if (c.code === cleanCode) {
+          found = true;
+          return { ...c, timesUsed: c.timesUsed + 1 };
+        }
+        return c;
+      })
+    );
+    return found;
+  };
+
   return (
     <HotelContext.Provider
       value={{
@@ -1937,6 +2129,15 @@ export const HotelProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addAuditLog,
         showToast,
         removeToast,
+
+        // Coupons & Promo Vouchers
+        coupons,
+        addCoupon,
+        updateCoupon,
+        deleteCoupon,
+        toggleCouponStatus,
+        validateAndApplyCoupon,
+        redeemCoupon,
       }}
     >
       {children}

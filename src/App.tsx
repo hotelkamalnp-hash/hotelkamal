@@ -36,7 +36,7 @@ function HotelAppContent() {
       <BookingCheckoutModal />
 
       {/* Staff Role & Super Admin Login Modal */}
-      <StaffLoginModal />
+      <StaffLoginModal onSuccess={() => setCurrentView('dashboard')} />
 
       {/* Real-Time CSR Concierge & WhatsApp Assistant */}
       <CSRWidget />

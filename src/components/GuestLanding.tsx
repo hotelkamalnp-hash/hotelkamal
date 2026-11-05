@@ -16,6 +16,7 @@ import {
   Navigation,
   Share2
 } from 'lucide-react';
+import suiteImg from '../assets/images/room_deluxe_suite_1793848735141.jpg';
 
 interface GuestLandingProps {
   onOpenDashboard: () => void;
@@ -187,7 +188,7 @@ export const GuestLanding: React.FC<GuestLandingProps> = ({ onOpenDashboard, onO
             <div className="lg:col-span-6 relative">
               <div className="aspect-[4/3] rounded-2xl overflow-hidden border border-stone-200 dark:border-stone-800 shadow-2xl">
                 <img
-                  src="/src/assets/images/room_deluxe_suite_1793848735141.jpg"
+                  src={suiteImg}
                   alt="Carved woodwork suite at Kamal Hotel Kathmandu"
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover"

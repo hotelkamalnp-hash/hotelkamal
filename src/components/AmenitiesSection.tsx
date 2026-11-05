@@ -10,10 +10,11 @@ import {
   Sparkles, 
   Coffee, 
   ShieldCheck, 
-  BellRing,
-  CheckCircle,
-  ExternalLink
+  BellRing, 
+  CheckCircle, 
+  ExternalLink 
 } from 'lucide-react';
+import rooftopImg from '../assets/images/amenity_rooftop_dining_1793848735329.jpg';
 
 export const AmenitiesSection: React.FC = () => {
   const { amenities, themeConfig, showToast } = useHotel();
@@ -74,7 +75,7 @@ export const AmenitiesSection: React.FC = () => {
         <div id="dining" className="mb-16 bg-white dark:bg-stone-900 rounded-2xl overflow-hidden border border-stone-200 dark:border-stone-800 shadow-xl grid grid-cols-1 lg:grid-cols-12 items-stretch">
           <div className="lg:col-span-7 relative aspect-[16/10] lg:aspect-auto lg:h-full min-h-[340px]">
             <img
-              src={themeConfig.rooftopDiningImage || '/src/assets/images/amenity_rooftop_dining_1793848735329.jpg'}
+              src={themeConfig.rooftopDiningImage || rooftopImg}
               alt="Rooftop Mountain Dining at Kamal Hotel Kathmandu"
               referrerPolicy="no-referrer"
               className="w-full h-full object-cover"

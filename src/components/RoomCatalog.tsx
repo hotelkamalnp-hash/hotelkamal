@@ -13,6 +13,7 @@ import {
   X,
   Coins
 } from 'lucide-react';
+import heroFallbackImg from '../assets/images/hero_hotel_exterior_1793848734140.jpg';
 
 interface RoomCatalogProps {
   filteredType?: string;
@@ -105,7 +106,7 @@ export const RoomCatalog: React.FC<RoomCatalogProps> = ({ filteredType = 'all', 
           {filteredRooms.map((room) => {
             const price = getEffectivePriceInCurrentCurrency(room.pricePerNightUSD);
             const original = room.originalPriceUSD ? getEffectivePriceInCurrentCurrency(room.originalPriceUSD) : null;
-            const mainImg = room.images[0] || '/src/assets/images/hero_hotel_exterior_1793848734140.jpg';
+            const mainImg = room.images[0] || heroFallbackImg;
 
             return (
               <div

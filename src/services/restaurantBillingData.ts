@@ -14,7 +14,7 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     category: 'Nepali Heritage & Newari',
     description: 'Organic Marsi red rice, local black lentil (kaalo daal), rayo ko saag, gundruk sandeko, mountain mutton curry, spicy tomato timur achar, and fresh curd.',
     priceUSD: 14.5,
-    imageUrl: '/src/assets/images/amenity_rooftop_dining_1793848735329.jpg',
+    imageUrl: './assets/images/amenity_rooftop_dining_1793848735329.jpg',
     isVegetarian: false,
     isSpicy: true,
     isChefSpecial: true,
@@ -248,7 +248,7 @@ export const INITIAL_STOCK_ITEMS: StockItem[] = [
 
 export const INITIAL_BILL_SETTINGS: BillSettings = {
   template: 'heritage-gold',
-  hotelLogoUrl: '/assets/aistudio/image_0a8c7264.png',
+  hotelLogoUrl: './assets/aistudio/image_0a8c7264.png',
   hotelLegalName: 'Kamal Hotel Pvt. Ltd.',
   panVatNumber: '304928174',
   taxLabel: 'Inland Revenue Dept (IRD) VAT',

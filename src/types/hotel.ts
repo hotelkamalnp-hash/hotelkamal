@@ -363,3 +363,25 @@ export interface AccountingSummary {
   paidInvoicesCount: number;
   pendingInvoicesCount: number;
 }
+
+// ----------------- COUPONS & PROMO VOUCHERS -----------------
+export type CouponDiscountType = 'percentage' | 'fixed_amount';
+export type CouponServiceScope = 'all' | 'rooms' | 'dining' | 'spa_services';
+
+export interface HotelCoupon {
+  id: string;
+  code: string; // e.g. WELCOME2026, ROOFTOP15, HIMALAYANVIP
+  description: string;
+  discountType: CouponDiscountType;
+  discountValue: number; // e.g. 15 for 15% or 20 for $20
+  applicableTo: CouponServiceScope;
+  minSpendUSD?: number;
+  maxDiscountUSD?: number;
+  validFrom: string;
+  validUntil: string;
+  usageLimit?: number;
+  timesUsed: number;
+  isActive: boolean;
+  createdBy?: string;
+}
+

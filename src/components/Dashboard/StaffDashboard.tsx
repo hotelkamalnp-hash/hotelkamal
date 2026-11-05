@@ -45,13 +45,18 @@ import {
   Receipt,
   Boxes,
   Key,
-  BarChart3
+  BarChart3,
+  Ticket,
+  Image as ImageIcon
 } from 'lucide-react';
 import { RestaurantBillingManager } from '../Restaurant/RestaurantBillingManager';
 import { InventoryStockManager } from '../Inventory/InventoryStockManager';
 import { MasterBillingManager } from '../Billing/MasterBillingManager';
 import { AccountingFinancialReports } from '../Accounting/AccountingFinancialReports';
 import { GuestPasscodeSessionManager } from '../GuestPortal/GuestPasscodeSessionManager';
+import { CouponManager } from '../Coupons/CouponManager';
+import { StaffGuestIntercom } from '../Intercom/StaffGuestIntercom';
+import { MediaGalleryManager } from '../CMS/MediaGalleryManager';
 
 export const StaffDashboard: React.FC = () => {
   const { 
@@ -98,6 +103,9 @@ export const StaffDashboard: React.FC = () => {
     | 'billing' 
     | 'inventory' 
     | 'passcodes' 
+    | 'coupons'
+    | 'intercom'
+    | 'media'
     | 'accounting' 
     | 'bookings' 
     | 'rooms' 
@@ -108,6 +116,19 @@ export const StaffDashboard: React.FC = () => {
     | 'audit';
 
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
+
+  // Strict Role Auto-Routing: immediately opens the respective authorized operational view
+  React.useEffect(() => {
+    if (activeRole === 'chef' || activeRole === 'waiter') {
+      setActiveTab('restaurant');
+    } else if (activeRole === 'receptionist') {
+      setActiveTab('passcodes');
+    } else if (activeRole === 'housekeeping') {
+      setActiveTab('rooms');
+    } else if (activeRole === 'super_admin' || activeRole === 'hotel_manager') {
+      // Retain current or default to overview
+    }
+  }, [activeRole]);
 
   // Search & Filters
   const [bookingSearch, setBookingSearch] = useState<string>('');
@@ -183,7 +204,7 @@ export const StaffDashboard: React.FC = () => {
       reviewsCount: 12,
       description: formData.get('description') as string,
       images: [
-        (formData.get('image') as string) || '/src/assets/images/room_deluxe_suite_1793848735141.jpg',
+        (formData.get('image') as string) || './assets/images/room_deluxe_suite_1793848735141.jpg',
       ],
       amenities: (formData.get('amenities') as string).split(',').map((s) => s.trim()),
     };
@@ -320,6 +341,18 @@ export const StaffDashboard: React.FC = () => {
               perm: activeRole === 'super_admin' || activeRole === 'hotel_manager' || activeRole === 'chef' || activeRole === 'waiter'
             },
             { 
+              id: 'coupons', 
+              label: 'Coupons & Vouchers', 
+              icon: <Ticket className="w-4 h-4" />, 
+              perm: activeRole === 'super_admin' || activeRole === 'hotel_manager' || activeRole === 'receptionist'
+            },
+            { 
+              id: 'intercom', 
+              label: 'Guest Intercom & Chat', 
+              icon: <MessageSquare className="w-4 h-4" />, 
+              perm: activeRole === 'super_admin' || activeRole === 'hotel_manager' || activeRole === 'receptionist' || activeRole === 'waiter'
+            },
+            { 
               id: 'billing', 
               label: 'Billing & Folios (5 Templates)', 
               icon: <Receipt className="w-4 h-4" />, 
@@ -330,6 +363,12 @@ export const StaffDashboard: React.FC = () => {
               label: 'Stock & Inventory', 
               icon: <Boxes className="w-4 h-4" />, 
               perm: activeRole === 'super_admin' || activeRole === 'hotel_manager' || activeRole === 'chef' || activeRole === 'housekeeping'
+            },
+            { 
+              id: 'media', 
+              label: 'Hero & Photos CMS', 
+              icon: <ImageIcon className="w-4 h-4" />, 
+              perm: activeRole === 'super_admin'
             },
             { 
               id: 'accounting', 
@@ -549,6 +588,21 @@ export const StaffDashboard: React.FC = () => {
           <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-6 shadow-sm space-y-6">
             <GuestPasscodeSessionManager />
           </div>
+        )}
+
+        {/* TAB: COUPONS, VOUCHERS & PROMO CODES */}
+        {activeTab === 'coupons' && (
+          <CouponManager />
+        )}
+
+        {/* TAB: GUEST & STAFF INTERCOM LIVE CHAT */}
+        {activeTab === 'intercom' && (
+          <StaffGuestIntercom />
+        )}
+
+        {/* TAB: HERO, ROOFTOP & ROOM PHOTOS MEDIA CMS */}
+        {activeTab === 'media' && (
+          <MediaGalleryManager />
         )}
 
         {/* TAB: ACCOUNTING & P&L (DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY) */}
@@ -884,7 +938,7 @@ export const StaffDashboard: React.FC = () => {
                       <label className="block font-semibold mb-1">Main Picture URL</label>
                       <input
                         name="image"
-                        defaultValue={editingRoom?.images[0] || '/src/assets/images/room_deluxe_suite_1793848735141.jpg'}
+                        defaultValue={editingRoom?.images[0] || './assets/images/room_deluxe_suite_1793848735141.jpg'}
                         className="w-full bg-stone-50 dark:bg-stone-800 border rounded p-2 text-stone-900 dark:text-stone-100"
                       />
                     </div>

@@ -21,6 +21,7 @@ import {
   LogOut,
   Key
 } from 'lucide-react';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface HeaderProps {
   currentView: 'guest' | 'dashboard' | 'in_room_guest';
@@ -207,6 +208,9 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView }) =
                 </button>
               ))}
             </div>
+
+            {/* PWA Install App Button */}
+            <PWAInstallButton />
 
             {/* Google Review direct button */}
             {themeConfig.googleReviewUrl && (
@@ -430,6 +434,10 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView }) =
             </nav>
 
             <div className="pt-2 border-t border-stone-200 dark:border-stone-800 flex flex-col gap-2">
+              <PWAInstallButton
+                className="w-full py-2.5 px-3 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs flex items-center justify-center gap-2 shadow"
+                variant="full"
+              />
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
