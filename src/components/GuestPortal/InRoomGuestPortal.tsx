@@ -65,14 +65,31 @@ export const InRoomGuestPortal: React.FC = () => {
   const [selectedServiceTag, setSelectedServiceTag] = useState<'room_service' | 'housekeeping' | 'concierge' | 'front_desk'>('concierge');
 
   // Handle guest login
-  const handleGuestLogin = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleGuestLogin = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setLoginError('');
     const res = loginGuestByRoom(inputRoom, inputPasscode);
     if (!res.success) {
       setLoginError(res.message);
     }
   };
+
+  // Auto-login from QR Code scan if room and pin query params exist
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && !activeGuestSession) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const roomParam = urlParams.get('room');
+      const pinParam = urlParams.get('pin');
+      if (roomParam && pinParam) {
+        setInputRoom(roomParam);
+        setInputPasscode(pinParam);
+        const res = loginGuestByRoom(roomParam, pinParam);
+        if (!res.success) {
+          setLoginError(res.message);
+        }
+      }
+    }
+  }, [activeGuestSession, loginGuestByRoom]);
 
   const handleAddToCart = (item: MenuItem) => {
     setDiningCart((prev) => {

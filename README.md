@@ -82,11 +82,29 @@ The output directory will be `dist/`, ready to deploy to **GitHub Pages**, **Ver
 
 ---
 
-## 📦 Deployment to GitHub Pages
+## 📦 1-Click Deployment to GitHub Pages (`hotelkamalnp-hash/hotelkamal`)
 
-1. In `vite.config.ts`, if deploying to a subpath like `https://username.github.io/repo-name/`, set `base: '/repo-name/'`.
-2. Add the `gh-pages` script or use GitHub Actions:
-```bash
-npm run build
-```
-Deploy the `dist/` folder to the `gh-pages` branch.
+This repository is pre-configured with `base: './'` and a full GitHub Actions deployment workflow at `.github/workflows/deploy.yml`.
+
+### How to Fix the Blank Screen and Deploy Successfully:
+
+1. **Enable GitHub Actions for Pages in your Repository Settings**:
+   - Go to your GitHub repository: `https://github.com/hotelkamalnp-hash/hotelkamal`
+   - Click **Settings** (top tab)
+   - On the left sidebar, click **Pages**
+   - Under **Build and deployment** $\rightarrow$ **Source**, choose **"GitHub Actions"** (do *not* use "Deploy from a branch").
+
+2. **Push the Latest Code**:
+   Commit and push all files (especially `.github/workflows/deploy.yml` and `vite.config.ts` with `base: './'`).
+
+3. **Automatic Deployment**:
+   - Once pushed, click the **Actions** tab on your repository.
+   - You will see the **Deploy Hotel Kamal to GitHub Pages** workflow run automatically.
+   - When complete (approx. 1-2 minutes), your site will be live at:
+     **`https://hotelkamalnp-hash.github.io/hotelkamal/`**
+
+### Why It Showed Blank Before:
+* By default, Vite builds assets with absolute root paths (`/assets/index.js`). When deployed to a GitHub Pages subpath (`/hotelkamal/`), the browser looked at `hotelkamalnp-hash.github.io/assets/index.js` (which returns a 404), causing the script not to load and showing a blank screen.
+* With `base: './'` in `vite.config.ts`, all assets use relative URLs (`./assets/index.js`), loading seamlessly on both GitHub Pages subpaths and custom domains.
+* Additionally, `.github/workflows/deploy.yml` automatically duplicates `dist/index.html` to `dist/404.html` to ensure direct page reloads never trigger GitHub Pages 404 errors.
+

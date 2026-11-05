@@ -303,7 +303,7 @@ export const StaffDashboard: React.FC = () => {
             },
             { 
               id: 'passcodes', 
-              label: 'Guest Stay Passcodes & PINs', 
+              label: 'Guest Passcodes & QR Keycards', 
               icon: <Key className="w-4 h-4" />, 
               perm: activeRole === 'super_admin' || activeRole === 'hotel_manager' || activeRole === 'receptionist'
             },

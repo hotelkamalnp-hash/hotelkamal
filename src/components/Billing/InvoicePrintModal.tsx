@@ -104,9 +104,9 @@ export const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                     <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-amber-950 uppercase">
                       {billSettings.hotelLegalName}
                     </h1>
-                    <p className="text-xs text-amber-900/80 font-medium">Kamalpokhari Marg, Ward No. 1, Kathmandu, Nepal</p>
+                    <p className="text-xs text-amber-900/80 font-medium">{billSettings.addressLine || 'Kamalpokhari Marg, Ward No. 1, Kathmandu, Nepal'}</p>
                     <div className="text-[11px] text-amber-800/70 font-mono mt-1">
-                      PAN/VAT Reg No: <span className="font-bold text-amber-950">{billSettings.panVatNumber}</span> · Ph: {billSettings.contactSupportPhone}
+                      PAN/VAT Reg: <span className="font-bold text-amber-950">{billSettings.panVatNumber}</span> · Ph: {billSettings.contactSupportPhone} {billSettings.contactEmail ? `· ${billSettings.contactEmail}` : ''}
                     </div>
                   </div>
                 </div>
@@ -115,6 +115,11 @@ export const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                   <div className="inline-block px-3 py-1 bg-amber-900 text-amber-100 text-xs font-bold uppercase tracking-wider rounded">
                     TAX INVOICE / GUEST FOLIO
                   </div>
+                  {billSettings.watermarkText && (
+                    <div className="text-[9px] text-amber-800/60 uppercase font-mono tracking-widest mt-0.5">
+                      {billSettings.watermarkText}
+                    </div>
+                  )}
                   <div className="text-sm font-bold text-amber-950 mt-1">{invoice.invoiceNumber}</div>
                   <div className="text-xs text-stone-500">Date: {invoice.issuedAt}</div>
                   <div className="text-xs text-stone-500">Booking Ref: <span className="font-bold text-stone-800">{invoice.bookingCode}</span></div>
@@ -197,12 +202,12 @@ export const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                   )}
 
                   <div className="flex justify-between text-stone-600">
-                    <span>Service Charge ({invoice.serviceChargePercent}%):</span>
+                    <span>{billSettings.serviceChargeLabel || 'Service Charge'} ({invoice.serviceChargePercent}%):</span>
                     <span>+{formatCurrency(convertPrice(invoice.serviceChargeAmountUSD, currency), currency)}</span>
                   </div>
 
                   <div className="flex justify-between text-stone-600">
-                    <span>VAT ({invoice.taxPercent}%):</span>
+                    <span>{billSettings.taxLabel || 'VAT'} ({invoice.taxPercent}%):</span>
                     <span>+{formatCurrency(convertPrice(invoice.taxAmountUSD, currency), currency)}</span>
                   </div>
 
@@ -242,7 +247,9 @@ export const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                   <span className="text-[11px] font-semibold text-stone-800 block">
                     {billSettings.authorizedSignatoryName}
                   </span>
-                  <span className="text-[10px] text-stone-400 uppercase font-mono">Authorized Signatory</span>
+                  <span className="text-[10px] text-stone-400 uppercase font-mono">
+                    {billSettings.authorizedSignatoryTitle || 'Authorized Signatory'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -325,11 +332,11 @@ export const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span>Service ({invoice.serviceChargePercent}%):</span>
+                    <span>{billSettings.serviceChargeLabel || 'Service'} ({invoice.serviceChargePercent}%):</span>
                     <span>+{formatCurrency(convertPrice(invoice.serviceChargeAmountUSD, currency), currency)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Tax ({invoice.taxPercent}%):</span>
+                    <span>{billSettings.taxLabel || 'Tax'} ({invoice.taxPercent}%):</span>
                     <span>+{formatCurrency(convertPrice(invoice.taxAmountUSD, currency), currency)}</span>
                   </div>
                   <div className="flex justify-between text-sm font-bold font-sans pt-2 border-t-2 border-stone-900 text-stone-900">
@@ -435,11 +442,11 @@ export const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                     <span>{formatCurrency(convertPrice(invoice.subtotalUSD, currency), currency)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Service ({invoice.serviceChargePercent}%):</span>
+                    <span>{billSettings.serviceChargeLabel || 'Service'} ({invoice.serviceChargePercent}%):</span>
                     <span>+{formatCurrency(convertPrice(invoice.serviceChargeAmountUSD, currency), currency)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>VAT ({invoice.taxPercent}%):</span>
+                    <span>{billSettings.taxLabel || 'VAT'} ({invoice.taxPercent}%):</span>
                     <span>+{formatCurrency(convertPrice(invoice.taxAmountUSD, currency), currency)}</span>
                   </div>
                   <div className="flex justify-between text-base font-bold font-serif text-rose-950 pt-2 border-t border-rose-900/20">
@@ -456,7 +463,7 @@ export const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
             <div className="max-w-xs mx-auto font-mono text-xs space-y-3 p-4 border border-dashed border-stone-400 bg-stone-50 rounded">
               <div className="text-center space-y-1 pb-2 border-b border-dashed border-stone-300">
                 <div className="font-bold text-sm uppercase">{billSettings.hotelLegalName}</div>
-                <div className="text-[10px] text-stone-500">Kamalpokhari, Kathmandu</div>
+                <div className="text-[10px] text-stone-500">{billSettings.addressLine || 'Kamalpokhari, Kathmandu'}</div>
                 <div className="text-[10px] text-stone-500">PAN: {billSettings.panVatNumber}</div>
                 <div className="text-[10px]">RCPT #{invoice.invoiceNumber}</div>
                 <div className="text-[10px]">{invoice.issuedAt}</div>
@@ -482,11 +489,11 @@ export const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                   <span>{formatCurrency(convertPrice(invoice.subtotalUSD, currency), currency)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>SVC ({invoice.serviceChargePercent}%):</span>
+                  <span>{billSettings.serviceChargeLabel || 'SVC'} ({invoice.serviceChargePercent}%):</span>
                   <span>+{formatCurrency(convertPrice(invoice.serviceChargeAmountUSD, currency), currency)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>VAT ({invoice.taxPercent}%):</span>
+                  <span>{billSettings.taxLabel || 'VAT'} ({invoice.taxPercent}%):</span>
                   <span>+{formatCurrency(convertPrice(invoice.taxAmountUSD, currency), currency)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-sm pt-1 border-t border-dashed border-stone-400">

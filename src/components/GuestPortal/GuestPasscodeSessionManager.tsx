@@ -14,8 +14,10 @@ import {
   Clock, 
   Smartphone,
   Trash2,
-  ExternalLink
+  ExternalLink,
+  QrCode
 } from 'lucide-react';
+import { GuestKeycardQrModal } from './GuestKeycardQrModal';
 
 export const GuestPasscodeSessionManager: React.FC = () => {
   const { 
@@ -31,6 +33,7 @@ export const GuestPasscodeSessionManager: React.FC = () => {
   const [selectedBookingForPasscode, setSelectedBookingForPasscode] = useState(bookings[0]?.id || '');
   const [customRoom, setCustomRoom] = useState('Room 302');
   const [customGuest, setCustomGuest] = useState('Eleanor Vance');
+  const [selectedSessionForQr, setSelectedSessionForQr] = useState<GuestRoomSession | null>(null);
 
   const handleCreatePasscode = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +42,10 @@ export const GuestPasscodeSessionManager: React.FC = () => {
     const guestName = bk ? bk.guestName : customGuest;
     const bkCode = bk ? bk.bookingCode : 'WALKIN-KEY';
 
-    generateNewRoomPasscode(roomName, bkCode, guestName);
+    const newSession = generateNewRoomPasscode(roomName, bkCode, guestName);
+    if (newSession) {
+      setSelectedSessionForQr(newSession);
+    }
   };
 
   return (
@@ -156,18 +162,31 @@ export const GuestPasscodeSessionManager: React.FC = () => {
                     </span>
                   </td>
                   <td className="py-3 px-4 text-right">
-                    {session.isActive ? (
-                      <button
-                        onClick={() => checkoutAndResetRoomPasscode(session.roomNumber)}
-                        className="px-2.5 py-1 rounded bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-center gap-1 transition-colors ml-auto"
-                        title="Checkout guest and reset passcode"
-                      >
-                        <LogOut className="w-3.5 h-3.5" />
-                        <span>Checkout & Reset Passcode</span>
-                      </button>
-                    ) : (
-                      <span className="text-[11px] text-stone-400 font-mono">Purged</span>
-                    )}
+                    <div className="flex items-center justify-end gap-1.5">
+                      {session.isActive && (
+                        <button
+                          onClick={() => setSelectedSessionForQr(session)}
+                          className="px-2.5 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 dark:bg-amber-950/60 dark:hover:bg-amber-900/80 text-amber-900 dark:text-amber-200 text-xs font-semibold flex items-center gap-1 transition-colors"
+                          title="Generate and print Guest Keycard with QR code"
+                        >
+                          <QrCode className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
+                          <span>QR Keycard</span>
+                        </button>
+                      )}
+
+                      {session.isActive ? (
+                        <button
+                          onClick={() => checkoutAndResetRoomPasscode(session.roomNumber)}
+                          className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-center gap-1 transition-colors"
+                          title="Checkout guest and reset passcode"
+                        >
+                          <LogOut className="w-3.5 h-3.5" />
+                          <span>Checkout</span>
+                        </button>
+                      ) : (
+                        <span className="text-[11px] text-stone-400 font-mono">Purged</span>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -175,6 +194,14 @@ export const GuestPasscodeSessionManager: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Guest Keycard & QR Modal */}
+      {selectedSessionForQr && (
+        <GuestKeycardQrModal
+          session={selectedSessionForQr}
+          onClose={() => setSelectedSessionForQr(null)}
+        />
+      )}
 
     </div>
   );

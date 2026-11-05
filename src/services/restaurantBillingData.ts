@@ -251,15 +251,24 @@ export const INITIAL_BILL_SETTINGS: BillSettings = {
   hotelLogoUrl: '/assets/aistudio/image_0a8c7264.png',
   hotelLegalName: 'Kamal Hotel Pvt. Ltd.',
   panVatNumber: '304928174',
+  taxLabel: 'Inland Revenue Dept (IRD) VAT',
   taxPercent: 13, // 13% Nepal VAT
+  serviceChargeLabel: 'Hospitality Service Surcharge',
   serviceChargePercent: 10, // 10% Hotel Service Charge
   defaultDiscountPercent: 0,
+  discountReasonPlaceholder: 'Direct Website Booking / VIP Privilege',
   footerNote: 'Dhanyabad (Thank You) for staying at Kamal Hotel, Kamalpokhari, Kathmandu. We wish you safe travels in the Himalayas!',
   showQrCodeForPayment: true,
   showBreakdownByService: true,
   termsAndConditions: 'Check-out is 12:00 PM. Damages to room amenities or linen will be charged as per hotel inventory schedule. Foreign currency settled at standard NRB exchange rates.',
   contactSupportPhone: '+977 1 4422589 / +977 9851023456',
-  authorizedSignatoryName: 'Kamal Dev Sharma (Managing Director)',
+  contactEmail: 'hotelkamal.np@gmail.com',
+  addressLine: 'Kamalpokhari Marg, Ward No. 1, Kathmandu 44600, Nepal',
+  authorizedSignatoryName: 'Kamal Dev Sharma',
+  authorizedSignatoryTitle: 'Managing Director & Proprietor',
+  currencyFormat: 'auto',
+  watermarkText: 'KAMAL HOTEL OFFICIAL FOLIO',
+  accentColor: '#991b1b',
 };
 
 export const INITIAL_INVOICES: MasterInvoice[] = [

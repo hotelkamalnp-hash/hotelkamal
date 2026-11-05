@@ -272,15 +272,24 @@ export interface BillSettings {
   hotelLogoUrl: string;
   hotelLegalName: string;
   panVatNumber: string;
+  taxLabel: string; // e.g. "Nepal VAT" or "Tax"
   taxPercent: number; // e.g. 13% VAT
+  serviceChargeLabel: string; // e.g. "Hotel Service Surcharge"
   serviceChargePercent: number; // e.g. 10% Service Charge
   defaultDiscountPercent: number;
+  discountReasonPlaceholder: string;
   footerNote: string;
   showQrCodeForPayment: boolean;
   showBreakdownByService: boolean;
   termsAndConditions: string;
   contactSupportPhone: string;
+  contactEmail: string;
+  addressLine: string;
   authorizedSignatoryName: string;
+  authorizedSignatoryTitle: string;
+  currencyFormat: 'NPR' | 'USD' | 'INR' | 'auto';
+  watermarkText?: string;
+  accentColor?: string; // Optional custom accent hex for template
 }
 
 export interface BillItemLine {

@@ -50,6 +50,7 @@ export const MasterBillingManager: React.FC = () => {
 
   // Form state for bill settings
   const [settingsForm, setSettingsForm] = useState(billSettings);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const filteredInvoices = invoices.filter((inv) => {
     const matchesSearch = inv.invoiceNumber.toLowerCase().includes(search.toLowerCase()) ||
@@ -62,6 +63,8 @@ export const MasterBillingManager: React.FC = () => {
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
     updateBillSettings(settingsForm);
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 3500);
   };
 
   const templates: { id: InvoiceTemplateId; name: string; desc: string }[] = [
@@ -219,20 +222,35 @@ export const MasterBillingManager: React.FC = () => {
       {activeSubTab === 'settings' && (
         <form onSubmit={handleSaveSettings} className="space-y-6">
           
+          {saveSuccess && (
+            <div className="p-3 bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-500 text-emerald-900 dark:text-emerald-200 rounded-xl text-xs flex items-center justify-between animate-fade-in">
+              <div className="flex items-center gap-2 font-semibold">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span>Invoice template preferences & dynamic placeholders saved successfully across all hotel billing systems!</span>
+              </div>
+              <span className="font-mono text-[10px] text-emerald-700 dark:text-emerald-400">ACTIVE IN REAL-TIME</span>
+            </div>
+          )}
+
           {/* Template Selection Cards */}
           <div className="space-y-3">
-            <h4 className="font-serif font-bold text-sm text-stone-900 dark:text-stone-100">
-              Select Invoice Print Template Design
-            </h4>
+            <div className="flex items-center justify-between">
+              <h4 className="font-serif font-bold text-sm text-stone-900 dark:text-stone-100 flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-amber-600" />
+                <span>Select & Customize Bill Template (5 Preset Designs)</span>
+              </h4>
+              <span className="text-xs text-stone-500">Live preview dynamically updates below</span>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
               {templates.map((tpl) => (
                 <button
                   key={tpl.id}
                   type="button"
                   onClick={() => setSettingsForm({ ...settingsForm, template: tpl.id })}
-                  className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between ${
+                  className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
                     settingsForm.template === tpl.id
-                      ? 'border-amber-600 bg-amber-50/60 dark:bg-amber-950/40 ring-2 ring-amber-600'
+                      ? 'border-amber-600 bg-amber-50/70 dark:bg-amber-950/40 ring-2 ring-amber-600 shadow-sm'
                       : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-stone-400'
                   }`}
                 >
@@ -243,139 +261,401 @@ export const MasterBillingManager: React.FC = () => {
                     <p className="text-[11px] text-stone-500 mt-1 leading-snug">{tpl.desc}</p>
                   </div>
                   <span className="mt-3 text-[10px] font-mono text-amber-700 dark:text-amber-400 font-bold uppercase">
-                    {settingsForm.template === tpl.id ? '✓ Active Template' : 'Select'}
+                    {settingsForm.template === tpl.id ? '✓ Selected' : 'Choose'}
                   </span>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Legal, Tax & Logo Config */}
-          <div className="bg-white dark:bg-stone-900 rounded-xl p-5 border border-stone-200 dark:border-stone-800 shadow-sm space-y-4 text-xs">
-            <h4 className="font-serif font-bold text-sm text-stone-900 dark:text-stone-100 border-b pb-2">
-              Hotel Legal Header & Tax Rates
-            </h4>
+          {/* 2-Column: Left Column Form, Right Column Live Mini Preview */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            {/* Left: Customizer Fields (7 cols) */}
+            <div className="lg:col-span-7 space-y-4">
+              
+              {/* Hotel Brand & Legal Identifiers */}
+              <div className="bg-white dark:bg-stone-900 rounded-xl p-5 border border-stone-200 dark:border-stone-800 shadow-sm space-y-4 text-xs">
+                <h5 className="font-serif font-bold text-xs uppercase tracking-wider text-amber-800 dark:text-amber-400 border-b pb-2">
+                  1. Hotel Identity, Branding & Contact Placeholders
+                </h5>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block font-semibold mb-1">Hotel Legal Name</label>
-                <input
-                  type="text"
-                  value={settingsForm.hotelLegalName}
-                  onChange={(e) => setSettingsForm({ ...settingsForm, hotelLegalName: e.target.value })}
-                  className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border"
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-semibold mb-1">Hotel Legal Registered Name</label>
+                    <input
+                      type="text"
+                      value={settingsForm.hotelLegalName}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, hotelLegalName: e.target.value })}
+                      className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border"
+                      placeholder="e.g. Kamal Hotel Pvt. Ltd."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold mb-1">Nepal PAN / VAT Reg No.</label>
+                    <input
+                      type="text"
+                      value={settingsForm.panVatNumber}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, panVatNumber: e.target.value })}
+                      className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border font-mono"
+                      placeholder="e.g. 601293849"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-semibold mb-1">Hotel Address Line</label>
+                    <input
+                      type="text"
+                      value={settingsForm.addressLine || ''}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, addressLine: e.target.value })}
+                      className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border"
+                      placeholder="Kamalpokhari Marg, Ward No. 1, Kathmandu"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold mb-1">Hotel Logo Image URL / Path</label>
+                    <input
+                      type="text"
+                      value={settingsForm.hotelLogoUrl}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, hotelLogoUrl: e.target.value })}
+                      className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border font-mono"
+                      placeholder="https://... or /logo.png"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-semibold mb-1">Billing Support Direct Phone</label>
+                    <input
+                      type="text"
+                      value={settingsForm.contactSupportPhone}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, contactSupportPhone: e.target.value })}
+                      className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold mb-1">Accounts & Billing Email</label>
+                    <input
+                      type="email"
+                      value={settingsForm.contactEmail || ''}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, contactEmail: e.target.value })}
+                      className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border font-mono"
+                      placeholder="billing@kamalhotel.np"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="block font-semibold mb-1">Nepal PAN / VAT Reg No.</label>
-                <input
-                  type="text"
-                  value={settingsForm.panVatNumber}
-                  onChange={(e) => setSettingsForm({ ...settingsForm, panVatNumber: e.target.value })}
-                  className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border font-mono"
-                />
+              {/* Dynamic Tax, Service Charge, and Discount Placeholders */}
+              <div className="bg-white dark:bg-stone-900 rounded-xl p-5 border border-stone-200 dark:border-stone-800 shadow-sm space-y-4 text-xs">
+                <h5 className="font-serif font-bold text-xs uppercase tracking-wider text-amber-800 dark:text-amber-400 border-b pb-2">
+                  2. Dynamic Tax, Service Charge & Discount Placeholders
+                </h5>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-semibold mb-1">Tax Display Label</label>
+                    <input
+                      type="text"
+                      value={settingsForm.taxLabel || ''}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, taxLabel: e.target.value })}
+                      className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border"
+                      placeholder="e.g. Nepal Inland Revenue VAT"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold mb-1">Standard VAT Rate (%)</label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={settingsForm.taxPercent}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, taxPercent: Number(e.target.value) })}
+                      className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-semibold mb-1">Service Charge Display Label</label>
+                    <input
+                      type="text"
+                      value={settingsForm.serviceChargeLabel || ''}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, serviceChargeLabel: e.target.value })}
+                      className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border"
+                      placeholder="e.g. Hotel Hospitality Service Charge"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold mb-1">Service Charge Rate (%)</label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={settingsForm.serviceChargePercent}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, serviceChargePercent: Number(e.target.value) })}
+                      className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-semibold mb-1">Default Discount Rate (%)</label>
+                    <input
+                      type="number"
+                      step="1"
+                      value={settingsForm.defaultDiscountPercent}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, defaultDiscountPercent: Number(e.target.value) })}
+                      className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold mb-1">Discount Reason Placeholder</label>
+                    <input
+                      type="text"
+                      value={settingsForm.discountReasonPlaceholder || ''}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, discountReasonPlaceholder: e.target.value })}
+                      className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border"
+                      placeholder="e.g. Seasonal Promo / Diplomatic / Corporate"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="block font-semibold mb-1">Hotel Logo Image URL / Path</label>
-                <input
-                  type="text"
-                  value={settingsForm.hotelLogoUrl}
-                  onChange={(e) => setSettingsForm({ ...settingsForm, hotelLogoUrl: e.target.value })}
-                  className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border font-mono"
-                />
+              {/* Signatory, Watermark & Notes */}
+              <div className="bg-white dark:bg-stone-900 rounded-xl p-5 border border-stone-200 dark:border-stone-800 shadow-sm space-y-4 text-xs">
+                <h5 className="font-serif font-bold text-xs uppercase tracking-wider text-amber-800 dark:text-amber-400 border-b pb-2">
+                  3. Signatory, Watermark & Disclaimer Text
+                </h5>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-semibold mb-1">Authorized Signatory Name</label>
+                    <input
+                      type="text"
+                      value={settingsForm.authorizedSignatoryName}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, authorizedSignatoryName: e.target.value })}
+                      className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border"
+                      placeholder="e.g. Rameshwor Shrestha"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold mb-1">Authorized Signatory Title</label>
+                    <input
+                      type="text"
+                      value={settingsForm.authorizedSignatoryTitle || ''}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, authorizedSignatoryTitle: e.target.value })}
+                      className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border"
+                      placeholder="e.g. Financial Controller & Operations Head"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-semibold mb-1">Folio Watermark Text</label>
+                    <input
+                      type="text"
+                      value={settingsForm.watermarkText || ''}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, watermarkText: e.target.value })}
+                      className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border font-mono"
+                      placeholder="e.g. ORIGINAL TAX INVOICE · KAMAL HOTEL"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold mb-1">Accent Highlight Color</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={settingsForm.accentColor || '#b45309'}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, accentColor: e.target.value })}
+                        className="h-8 w-12 rounded cursor-pointer border"
+                      />
+                      <input
+                        type="text"
+                        value={settingsForm.accentColor || '#b45309'}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, accentColor: e.target.value })}
+                        className="flex-1 p-2 rounded bg-stone-50 dark:bg-stone-800 border font-mono uppercase"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-semibold mb-1">Footer Hospitality Greeting</label>
+                  <input
+                    type="text"
+                    value={settingsForm.footerNote}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, footerNote: e.target.value })}
+                    className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border"
+                    placeholder="Dhanyabad for staying at Kamal Hotel Kathmandu..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold mb-1">Terms & Conditions Disclaimer</label>
+                  <textarea
+                    value={settingsForm.termsAndConditions}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, termsAndConditions: e.target.value })}
+                    rows={2}
+                    className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border"
+                  />
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="submit"
+                    className={`px-5 py-2.5 rounded-lg font-semibold text-xs shadow ${themeClasses.primary} flex items-center gap-1.5`}
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Save Invoice Customization Settings</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Right: Live Interactive Bill Preview (5 cols) */}
+            <div className="lg:col-span-5 space-y-3 sticky top-4">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>Live Template Preview</span>
+                </span>
+                <span className="text-[10px] font-mono text-stone-400">
+                  {settingsForm.template.toUpperCase()}
+                </span>
+              </div>
+
+              {/* Render simulated invoice using live form values */}
+              <div className="bg-white text-stone-900 rounded-2xl border-2 border-stone-300 dark:border-stone-700 p-5 shadow-lg text-[11px] space-y-4 overflow-hidden">
+                
+                {/* Mini Header */}
+                <div className="flex items-start justify-between border-b pb-3">
+                  <div className="flex items-center gap-2.5">
+                    {settingsForm.hotelLogoUrl && (
+                      <img
+                        src={settingsForm.hotelLogoUrl}
+                        alt="Logo"
+                        className="w-9 h-9 object-contain rounded border p-0.5"
+                      />
+                    )}
+                    <div>
+                      <h4 className="font-serif font-bold text-xs uppercase text-stone-900">
+                        {settingsForm.hotelLegalName}
+                      </h4>
+                      <p className="text-[10px] text-stone-500">{settingsForm.addressLine || 'Kamalpokhari, Kathmandu'}</p>
+                      <p className="text-[9px] font-mono text-stone-400">PAN: {settingsForm.panVatNumber}</p>
+                    </div>
+                  </div>
+
+                  <div className="text-right font-mono text-[10px]">
+                    <span className="inline-block px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold uppercase text-[9px]">
+                      TAX INVOICE
+                    </span>
+                    <div className="font-bold mt-1">#INV-2025-089</div>
+                    <div className="text-stone-400">Room 302</div>
+                  </div>
+                </div>
+
+                {/* Watermark badge if present */}
+                {settingsForm.watermarkText && (
+                  <div className="py-0.5 px-2 rounded bg-amber-50 border border-amber-200/60 text-[9px] font-mono font-bold text-amber-900 text-center tracking-wider">
+                    {settingsForm.watermarkText}
+                  </div>
+                )}
+
+                {/* Mini Sample Line Items */}
+                <div className="space-y-1.5 border-b pb-3 text-[10px]">
+                  <div className="flex justify-between font-bold text-stone-400 uppercase font-mono text-[9px]">
+                    <span>Particulars</span>
+                    <span>Amount</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Deluxe Suite (2 Nights)</span>
+                    <span className="font-mono">$170.00</span>
+                  </div>
+                  <div className="flex justify-between text-stone-600">
+                    <span>Rooftop Himalayan Sizzler (x2)</span>
+                    <span className="font-mono">$24.00</span>
+                  </div>
+                  <div className="flex justify-between text-stone-600">
+                    <span>Airport Chauffeured Transfer</span>
+                    <span className="font-mono">$18.00</span>
+                  </div>
+                </div>
+
+                {/* Mini Calculation Breakdown */}
+                <div className="space-y-1 text-[10px] font-mono">
+                  <div className="flex justify-between text-stone-500">
+                    <span>Subtotal:</span>
+                    <span>$212.00</span>
+                  </div>
+
+                  {settingsForm.defaultDiscountPercent > 0 && (
+                    <div className="flex justify-between text-rose-600">
+                      <span>Discount ({settingsForm.defaultDiscountPercent}%):</span>
+                      <span>-$21.20</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between text-stone-600">
+                    <span>{settingsForm.serviceChargeLabel || 'Service Charge'} ({settingsForm.serviceChargePercent}%):</span>
+                    <span>+$21.20</span>
+                  </div>
+
+                  <div className="flex justify-between text-stone-600">
+                    <span>{settingsForm.taxLabel || 'VAT'} ({settingsForm.taxPercent}%):</span>
+                    <span>+$27.56</span>
+                  </div>
+
+                  <div className="flex justify-between text-xs font-bold text-stone-900 pt-1.5 border-t border-stone-200 font-sans">
+                    <span>Grand Total Due:</span>
+                    <span>$239.56</span>
+                  </div>
+                </div>
+
+                {/* Mini Signatory & Footer */}
+                <div className="pt-2 border-t text-[10px] flex items-end justify-between">
+                  <div className="text-[9px] text-stone-400 max-w-[170px] italic">
+                    “{settingsForm.footerNote}”
+                  </div>
+                  <div className="text-right">
+                    <div className="w-24 h-4 border-b border-stone-300 ml-auto mb-0.5"></div>
+                    <span className="font-semibold block text-[10px] text-stone-800">
+                      {settingsForm.authorizedSignatoryName}
+                    </span>
+                    <span className="text-[8px] font-mono uppercase text-stone-400 block">
+                      {settingsForm.authorizedSignatoryTitle || 'Authorized Signatory'}
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+
+              <div className="p-3 bg-stone-100 dark:bg-stone-800/60 rounded-xl text-[11px] text-stone-500 space-y-1">
+                <p className="font-semibold text-stone-700 dark:text-stone-300">
+                  Tip for Super Admin:
+                </p>
+                <p>
+                  Any updates to tax percentages or service charge titles automatically propagate to all future bills generated by front desk receptionists and in-room folios.
+                </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block font-semibold mb-1">Standard VAT Rate (%)</label>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={settingsForm.taxPercent}
-                  onChange={(e) => setSettingsForm({ ...settingsForm, taxPercent: Number(e.target.value) })}
-                  className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border font-mono"
-                />
-                <span className="text-[10px] text-stone-400">Nepal standard hotel VAT is 13%.</span>
-              </div>
-
-              <div>
-                <label className="block font-semibold mb-1">Hotel Service Charge (%)</label>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={settingsForm.serviceChargePercent}
-                  onChange={(e) => setSettingsForm({ ...settingsForm, serviceChargePercent: Number(e.target.value) })}
-                  className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border font-mono"
-                />
-                <span className="text-[10px] text-stone-400">Standard hospitality service fee is 10%.</span>
-              </div>
-
-              <div>
-                <label className="block font-semibold mb-1">Default Discount (%)</label>
-                <input
-                  type="number"
-                  step="1"
-                  value={settingsForm.defaultDiscountPercent}
-                  onChange={(e) => setSettingsForm({ ...settingsForm, defaultDiscountPercent: Number(e.target.value) })}
-                  className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border font-mono"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block font-semibold mb-1">Official Authorized Signatory</label>
-                <input
-                  type="text"
-                  value={settingsForm.authorizedSignatoryName}
-                  onChange={(e) => setSettingsForm({ ...settingsForm, authorizedSignatoryName: e.target.value })}
-                  className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold mb-1">Support & Accounts Direct Phone</label>
-                <input
-                  type="text"
-                  value={settingsForm.contactSupportPhone}
-                  onChange={(e) => setSettingsForm({ ...settingsForm, contactSupportPhone: e.target.value })}
-                  className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border font-mono"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block font-semibold mb-1">Footer Hospitality Note</label>
-              <input
-                type="text"
-                value={settingsForm.footerNote}
-                onChange={(e) => setSettingsForm({ ...settingsForm, footerNote: e.target.value })}
-                className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border"
-              />
-            </div>
-
-            <div>
-              <label className="block font-semibold mb-1">Terms & Conditions Disclaimer</label>
-              <textarea
-                value={settingsForm.termsAndConditions}
-                onChange={(e) => setSettingsForm({ ...settingsForm, termsAndConditions: e.target.value })}
-                rows={2}
-                className="w-full p-2 rounded bg-stone-50 dark:bg-stone-800 border"
-              />
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                type="submit"
-                className={`px-5 py-2 rounded-lg font-semibold text-xs shadow ${themeClasses.primary}`}
-              >
-                Save Invoice Customization Settings
-              </button>
-            </div>
           </div>
+
         </form>
       )}
 
