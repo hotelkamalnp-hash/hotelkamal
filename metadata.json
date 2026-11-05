@@ -1,0 +1,6 @@
+{
+  "name": "Kamal Hotel - Boutique 3-Star Booking & Hospitality Management",
+  "description": "Premium 3-star boutique hotel booking platform, real-time availability, secure payment checkout, CMS page customizer, role-based staff operations dashboard, and automated guest notifications.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
