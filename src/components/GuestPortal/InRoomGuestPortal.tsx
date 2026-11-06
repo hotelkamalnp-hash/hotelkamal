@@ -23,7 +23,8 @@ import {
   Star,
   Mic,
   MicOff,
-  PhoneOff
+  PhoneOff,
+  Tag
 } from 'lucide-react';
 
 export const InRoomGuestPortal: React.FC = () => {
@@ -42,7 +43,10 @@ export const InRoomGuestPortal: React.FC = () => {
     endVoipCall,
     themeConfig,
     currentCurrency,
-    invoices
+    invoices,
+    validateAndApplyCoupon,
+    redeemCoupon,
+    showToast
   } = useHotel();
 
   const themeClasses = getThemeClasses(themeConfig.palette);
@@ -59,6 +63,15 @@ export const InRoomGuestPortal: React.FC = () => {
   const [diningCart, setDiningCart] = useState<{ item: MenuItem; quantity: number }[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [specialNote, setSpecialNote] = useState('');
+
+  // Dining Promo Voucher State
+  const [diningCouponInput, setDiningCouponInput] = useState<string>('');
+  const [appliedDiningCoupon, setAppliedDiningCoupon] = useState<{
+    code: string;
+    discountUSD: number;
+    description: string;
+  } | null>(null);
+  const [diningCouponError, setDiningCouponError] = useState<string>('');
 
   // Chat message input
   const [chatInput, setChatInput] = useState('');
@@ -113,10 +126,36 @@ export const InRoomGuestPortal: React.FC = () => {
     );
   };
 
-  const cartSubtotal = diningCart.reduce((acc, c) => acc + (c.item.priceUSD * c.quantity), 0);
+  const cartRawSubtotal = diningCart.reduce((acc, c) => acc + (c.item.priceUSD * c.quantity), 0);
+  const diningDiscountUSD = appliedDiningCoupon ? appliedDiningCoupon.discountUSD : 0;
+  const cartSubtotal = Math.max(0, cartRawSubtotal - diningDiscountUSD);
   const cartServiceCharge = cartSubtotal * 0.10;
   const cartTax = (cartSubtotal + cartServiceCharge) * 0.13;
   const cartGrandTotal = cartSubtotal + cartServiceCharge + cartTax;
+
+  const handleApplyDiningCoupon = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setDiningCouponError('');
+    if (!diningCouponInput.trim()) return;
+
+    const res = validateAndApplyCoupon(diningCouponInput.trim(), cartRawSubtotal, 'dining');
+    if (res.valid && res.coupon) {
+      setAppliedDiningCoupon({
+        code: res.coupon.code,
+        discountUSD: res.discountAmountUSD,
+        description: res.coupon.description,
+      });
+      showToast('Voucher Applied!', `Saved $${res.discountAmountUSD.toFixed(2)} on room dining!`, 'success');
+    } else {
+      setDiningCouponError(res.message);
+    }
+  };
+
+  const handleRemoveDiningCoupon = () => {
+    setAppliedDiningCoupon(null);
+    setDiningCouponInput('');
+    setDiningCouponError('');
+  };
 
   const handleSendOrder = () => {
     if (diningCart.length === 0 || !activeGuestSession) return;
@@ -138,8 +177,16 @@ export const InRoomGuestPortal: React.FC = () => {
       serviceChargeUSD: cartServiceCharge,
       totalAmountUSD: cartGrandTotal,
       paymentMode: 'charge_to_room',
-      kitchenNotes: specialNote,
+      kitchenNotes: appliedDiningCoupon 
+        ? `${specialNote ? specialNote + ' | ' : ''}Voucher Applied: ${appliedDiningCoupon.code} (-$${appliedDiningCoupon.discountUSD.toFixed(2)})`
+        : specialNote,
     });
+
+    if (appliedDiningCoupon) {
+      redeemCoupon(appliedDiningCoupon.code);
+      setAppliedDiningCoupon(null);
+      setDiningCouponInput('');
+    }
 
     setDiningCart([]);
     setSpecialNote('');
@@ -250,7 +297,7 @@ export const InRoomGuestPortal: React.FC = () => {
 
   // LOGGED-IN IN-HOUSE GUEST INTERFACE
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6 w-full overflow-x-hidden">
       
       {/* Active Guest Banner */}
       <div className="bg-white dark:bg-stone-900 p-5 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -451,11 +498,69 @@ export const InRoomGuestPortal: React.FC = () => {
                   />
                 </div>
 
+                {/* Dining Promo Voucher Input */}
+                <div className="pt-2 pb-1 border-t border-stone-200 dark:border-stone-800">
+                  {appliedDiningCoupon ? (
+                    <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1.5 text-emerald-800 dark:text-emerald-300 font-medium">
+                        <Tag className="w-3.5 h-3.5" />
+                        <span>Voucher: {appliedDiningCoupon.code}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-emerald-700 dark:text-emerald-400 font-mono">
+                          -{formatCurrency(convertPrice(appliedDiningCoupon.discountUSD, currentCurrency), currentCurrency)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handleRemoveDiningCoupon}
+                          className="text-stone-400 hover:text-rose-600 font-bold px-1"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <div className="flex gap-1.5">
+                        <input
+                          type="text"
+                          placeholder="Dining Voucher Code"
+                          value={diningCouponInput}
+                          onChange={(e) => {
+                            setDiningCouponInput(e.target.value.toUpperCase());
+                            setDiningCouponError('');
+                          }}
+                          className="flex-1 p-1.5 rounded bg-stone-50 dark:bg-stone-800 border text-xs font-mono uppercase"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleApplyDiningCoupon()}
+                          className="px-2.5 py-1.5 rounded bg-amber-800 text-white font-semibold text-xs"
+                        >
+                          Apply
+                        </button>
+                      </div>
+                      {diningCouponError && (
+                        <p className="text-[11px] text-rose-600 font-medium">{diningCouponError}</p>
+                      )}
+                      <p className="text-[10px] text-stone-400">
+                        Try code: <span className="font-mono font-bold text-stone-600 dark:text-stone-300">ROOFTOP10</span> ($10 off) or <span className="font-mono font-bold text-stone-600 dark:text-stone-300">WELCOME2026</span>
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <div className="space-y-1 text-xs font-mono">
                   <div className="flex justify-between text-stone-500">
                     <span>Subtotal:</span>
-                    <span>{formatCurrency(convertPrice(cartSubtotal, currentCurrency), currentCurrency)}</span>
+                    <span>{formatCurrency(convertPrice(cartRawSubtotal, currentCurrency), currentCurrency)}</span>
                   </div>
+                  {appliedDiningCoupon && (
+                    <div className="flex justify-between text-emerald-700 dark:text-emerald-400 font-semibold">
+                      <span>Voucher Discount:</span>
+                      <span>-{formatCurrency(convertPrice(diningDiscountUSD, currentCurrency), currentCurrency)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-stone-500">
                     <span>Service (10%):</span>
                     <span>+{formatCurrency(convertPrice(cartServiceCharge, currentCurrency), currentCurrency)}</span>

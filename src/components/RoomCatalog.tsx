@@ -14,6 +14,7 @@ import {
   Coins
 } from 'lucide-react';
 import heroFallbackImg from '../assets/images/hero_hotel_exterior_1793848734140.jpg';
+import { ModalDismissButton, useModalDismiss } from './Common/ModalDismissHandler';
 
 interface RoomCatalogProps {
   filteredType?: string;
@@ -25,6 +26,8 @@ export const RoomCatalog: React.FC<RoomCatalogProps> = ({ filteredType = 'all', 
   const [activeFilter, setActiveFilter] = useState<string>(filteredType);
   const [detailModalRoom, setDetailModalRoom] = useState<Room | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
+
+  useModalDismiss(Boolean(detailModalRoom), () => setDetailModalRoom(null));
 
   const themeClasses = getThemeClasses(themeConfig.palette);
 
@@ -258,9 +261,15 @@ export const RoomCatalog: React.FC<RoomCatalogProps> = ({ filteredType = 'all', 
 
       {/* Room Detail & Photo Gallery Modal */}
       {detailModalRoom && (
-        <div className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-stone-900 rounded-2xl max-w-3xl w-full border border-stone-200 dark:border-stone-800 shadow-2xl overflow-hidden my-8">
-            <div className="p-4 sm:p-6 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between">
+        <div 
+          className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+          onClick={() => setDetailModalRoom(null)}
+        >
+          <div 
+            className="bg-white dark:bg-stone-900 rounded-2xl max-w-3xl w-full border border-stone-200 dark:border-stone-800 shadow-2xl overflow-hidden my-8 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 sm:p-6 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between pr-12">
               <div>
                 <span className="text-xs font-semibold uppercase tracking-widest text-amber-700 dark:text-amber-400">
                   Room Specification
@@ -269,13 +278,8 @@ export const RoomCatalog: React.FC<RoomCatalogProps> = ({ filteredType = 'all', 
                   {detailModalRoom.name}
                 </h3>
               </div>
-              <button
-                onClick={() => setDetailModalRoom(null)}
-                className="p-2 rounded-lg text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800"
-              >
-                <X className="w-5 h-5" />
-              </button>
             </div>
+            <ModalDismissButton onClick={() => setDetailModalRoom(null)} label="Close Room Details" />
 
             <div className="p-4 sm:p-6 space-y-4">
               <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-stone-100 dark:bg-stone-800">

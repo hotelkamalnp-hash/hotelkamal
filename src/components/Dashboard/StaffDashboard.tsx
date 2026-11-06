@@ -57,6 +57,7 @@ import { GuestPasscodeSessionManager } from '../GuestPortal/GuestPasscodeSession
 import { CouponManager } from '../Coupons/CouponManager';
 import { StaffGuestIntercom } from '../Intercom/StaffGuestIntercom';
 import { MediaGalleryManager } from '../CMS/MediaGalleryManager';
+import { ModalDismissButton, useModalDismiss } from '../Common/ModalDismissHandler';
 
 export const StaffDashboard: React.FC = () => {
   const { 
@@ -141,6 +142,12 @@ export const StaffDashboard: React.FC = () => {
   const [isAddReviewOpen, setIsAddReviewOpen] = useState<boolean>(false);
   const [isAddFaqOpen, setIsAddFaqOpen] = useState<boolean>(false);
 
+  // Modal dismiss bindings (ESC key & body scroll lock)
+  useModalDismiss(isAddRoomOpen, () => { setIsAddRoomOpen(false); setEditingRoom(null); });
+  useModalDismiss(isAddStaffOpen, () => setIsAddStaffOpen(false));
+  useModalDismiss(isAddReviewOpen, () => setIsAddReviewOpen(false));
+  useModalDismiss(isAddFaqOpen, () => setIsAddFaqOpen(false));
+
   // Editing items
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
 
@@ -222,6 +229,8 @@ export const StaffDashboard: React.FC = () => {
   const [selectedStaffForPassword, setSelectedStaffForPassword] = useState<StaffUser | null>(null);
   const [newPasswordInput, setNewPasswordInput] = useState<string>('');
 
+  useModalDismiss(Boolean(selectedStaffForPassword), () => setSelectedStaffForPassword(null));
+
   // Handle Staff Form Submit
   const handleSaveStaff = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -274,7 +283,7 @@ export const StaffDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-stone-100 dark:bg-stone-950 transition-colors py-8">
+    <div className="min-h-screen bg-stone-100 dark:bg-stone-950 transition-colors py-8 w-full max-w-full overflow-x-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         
         {/* Dashboard Title & Active Persona Banner */}
@@ -836,16 +845,20 @@ export const StaffDashboard: React.FC = () => {
 
             {/* Add / Edit Room Modal */}
             {isAddRoomOpen && (
-              <div className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-                <div className="bg-white dark:bg-stone-900 rounded-xl max-w-xl w-full border border-stone-200 dark:border-stone-800 p-6 space-y-4 my-8">
-                  <div className="flex justify-between items-center border-b pb-3 border-stone-200 dark:border-stone-800">
+              <div 
+                className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+                onClick={() => { setIsAddRoomOpen(false); setEditingRoom(null); }}
+              >
+                <div 
+                  className="bg-white dark:bg-stone-900 rounded-xl max-w-xl w-full border border-stone-200 dark:border-stone-800 p-6 space-y-4 my-8 relative"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex justify-between items-center border-b pb-3 border-stone-200 dark:border-stone-800 pr-8">
                     <h4 className="font-serif font-bold text-lg text-stone-900 dark:text-stone-50">
                       {editingRoom ? 'Edit Room Specifications' : 'Add New Room Specification'}
                     </h4>
-                    <button onClick={() => setIsAddRoomOpen(false)} className="text-stone-400 hover:text-stone-600">
-                      <XCircle className="w-5 h-5" />
-                    </button>
                   </div>
+                  <ModalDismissButton onClick={() => { setIsAddRoomOpen(false); setEditingRoom(null); }} label="Close Room Specifications" />
 
                   <form onSubmit={handleSaveRoom} className="space-y-4 text-xs">
                     <div>
@@ -1288,11 +1301,60 @@ export const StaffDashboard: React.FC = () => {
               </div>
             </div>
 
+            {/* 7. Frequently Asked Questions Manager */}
+            <div className="space-y-4 pt-4 border-t border-stone-200 dark:border-stone-800">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-serif font-bold text-stone-900 dark:text-stone-100">
+                    Frequently Asked Questions ({faqs.length})
+                  </h4>
+                  <p className="text-xs text-stone-500">Add or manage guest FAQs visible on the public landing page.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsAddFaqOpen(true)}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded flex items-center gap-1 ${themeClasses.primary}`}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add FAQ</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {faqs.map((faq) => (
+                  <div key={faq.id} className="p-3.5 rounded-lg bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-xs space-y-1.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-semibold text-stone-900 dark:text-stone-100">{faq.question}</span>
+                      <button 
+                        type="button" 
+                        onClick={() => deleteFaq(faq.id)} 
+                        className="text-stone-400 hover:text-rose-600 shrink-0"
+                        title="Delete FAQ"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <p className="text-stone-600 dark:text-stone-300 text-[11px] leading-relaxed">{faq.answer}</p>
+                    <span className="inline-block text-[10px] font-mono uppercase text-amber-700 dark:text-amber-400 font-semibold">{faq.category}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Modal to Add Review */}
             {isAddReviewOpen && (
-              <div className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-white dark:bg-stone-900 rounded-xl max-w-md w-full p-6 space-y-4 border border-stone-200 dark:border-stone-700 text-xs">
-                  <h4 className="text-base font-bold font-serif">Add Guest Review</h4>
+              <div 
+                className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4"
+                onClick={() => setIsAddReviewOpen(false)}
+              >
+                <div 
+                  className="bg-white dark:bg-stone-900 rounded-xl max-w-md w-full p-6 space-y-4 border border-stone-200 dark:border-stone-700 text-xs relative"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between border-b pb-2 pr-8">
+                    <h4 className="text-base font-bold font-serif text-stone-900 dark:text-stone-50">Add Guest Review</h4>
+                  </div>
+                  <ModalDismissButton onClick={() => setIsAddReviewOpen(false)} label="Close Add Review" />
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
@@ -1334,6 +1396,63 @@ export const StaffDashboard: React.FC = () => {
                       </button>
                       <button type="submit" className={`px-4 py-1.5 rounded font-semibold ${themeClasses.primary}`}>
                         Save Review
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* Modal to Add FAQ */}
+            {isAddFaqOpen && (
+              <div 
+                className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4"
+                onClick={() => setIsAddFaqOpen(false)}
+              >
+                <div 
+                  className="bg-white dark:bg-stone-900 rounded-xl max-w-md w-full p-6 space-y-4 border border-stone-200 dark:border-stone-700 text-xs relative"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between border-b pb-2 pr-8">
+                    <h4 className="text-base font-bold font-serif text-stone-900 dark:text-stone-50">Add FAQ</h4>
+                  </div>
+                  <ModalDismissButton onClick={() => setIsAddFaqOpen(false)} label="Close Add FAQ" />
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const fd = new FormData(e.currentTarget);
+                      addFaq({
+                        question: fd.get('question') as string,
+                        answer: fd.get('answer') as string,
+                        category: (fd.get('category') as string) || 'General',
+                      });
+                      setIsAddFaqOpen(false);
+                    }}
+                    className="space-y-3"
+                  >
+                    <div>
+                      <label className="block font-semibold mb-1">Question</label>
+                      <input name="question" placeholder="e.g. Can we arrange early airport pickup?" required className="w-full bg-stone-50 dark:bg-stone-800 border rounded p-2" />
+                    </div>
+                    <div>
+                      <label className="block font-semibold mb-1">Answer</label>
+                      <textarea name="answer" rows={3} placeholder="e.g. Yes! Contact our front desk 24 hours prior..." required className="w-full bg-stone-50 dark:bg-stone-800 border rounded p-2" />
+                    </div>
+                    <div>
+                      <label className="block font-semibold mb-1">Category</label>
+                      <select name="category" defaultValue="Services" className="w-full bg-stone-50 dark:bg-stone-800 border rounded p-2">
+                        <option value="Services">Services</option>
+                        <option value="Booking">Booking</option>
+                        <option value="Location">Location</option>
+                        <option value="Dining">Dining</option>
+                      </select>
+                    </div>
+                    <div className="flex justify-end gap-2 pt-2">
+                      <button type="button" onClick={() => setIsAddFaqOpen(false)} className="px-3 py-1.5 border rounded">
+                        Cancel
+                      </button>
+                      <button type="submit" className={`px-4 py-1.5 rounded font-semibold ${themeClasses.primary}`}>
+                        Save FAQ
                       </button>
                     </div>
                   </form>
@@ -1624,9 +1743,15 @@ export const StaffDashboard: React.FC = () => {
 
             {/* Change Password Modal */}
             {selectedStaffForPassword && (
-              <div className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-white dark:bg-stone-900 rounded-xl max-w-md w-full border border-stone-200 dark:border-stone-800 p-6 space-y-4">
-                  <div className="flex justify-between items-center border-b pb-3 border-stone-200 dark:border-stone-800">
+              <div 
+                className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4"
+                onClick={() => setSelectedStaffForPassword(null)}
+              >
+                <div 
+                  className="bg-white dark:bg-stone-900 rounded-xl max-w-md w-full border border-stone-200 dark:border-stone-800 p-6 space-y-4 relative"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex justify-between items-center border-b pb-3 border-stone-200 dark:border-stone-800 pr-8">
                     <div>
                       <h4 className="font-serif font-bold text-base text-stone-900 dark:text-stone-50">
                         Update Password for @{selectedStaffForPassword.username}
@@ -1635,10 +1760,8 @@ export const StaffDashboard: React.FC = () => {
                         Member: {selectedStaffForPassword.name} ({selectedStaffForPassword.role.replace('_', ' ')})
                       </p>
                     </div>
-                    <button onClick={() => setSelectedStaffForPassword(null)} className="text-stone-400">
-                      <XCircle className="w-5 h-5" />
-                    </button>
                   </div>
+                  <ModalDismissButton onClick={() => setSelectedStaffForPassword(null)} label="Close Password Modal" />
 
                   <form
                     onSubmit={(e) => {
@@ -1689,16 +1812,20 @@ export const StaffDashboard: React.FC = () => {
 
             {/* Add Staff Modal */}
             {isAddStaffOpen && (
-              <div className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-white dark:bg-stone-900 rounded-xl max-w-md w-full border border-stone-200 dark:border-stone-800 p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-                  <div className="flex justify-between items-center border-b pb-3 border-stone-200 dark:border-stone-800">
+              <div 
+                className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4"
+                onClick={() => setIsAddStaffOpen(false)}
+              >
+                <div 
+                  className="bg-white dark:bg-stone-900 rounded-xl max-w-md w-full border border-stone-200 dark:border-stone-800 p-6 space-y-4 max-h-[90vh] overflow-y-auto relative"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex justify-between items-center border-b pb-3 border-stone-200 dark:border-stone-800 pr-8">
                     <h4 className="font-serif font-bold text-lg text-stone-900 dark:text-stone-50">
                       Add New Staff Member
                     </h4>
-                    <button onClick={() => setIsAddStaffOpen(false)} className="text-stone-400">
-                      <XCircle className="w-5 h-5" />
-                    </button>
                   </div>
+                  <ModalDismissButton onClick={() => setIsAddStaffOpen(false)} label="Close Add Staff Modal" />
 
                   <form onSubmit={handleSaveStaff} className="space-y-4 text-xs">
                     <div>

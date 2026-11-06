@@ -14,6 +14,7 @@ import {
   ExternalLink,
   Copy
 } from 'lucide-react';
+import { useModalDismiss, ModalDismissButton } from '../Common/ModalDismissHandler';
 
 interface GuestKeycardQrModalProps {
   session: GuestRoomSession;
@@ -23,6 +24,11 @@ interface GuestKeycardQrModalProps {
 export const GuestKeycardQrModal: React.FC<GuestKeycardQrModalProps> = ({ session, onClose }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [copied, setCopied] = React.useState(false);
+
+  useModalDismiss({
+    isOpen: true,
+    onClose,
+  });
 
   // Generate guest direct login URL
   const portalUrl = typeof window !== 'undefined'
@@ -60,8 +66,13 @@ export const GuestKeycardQrModal: React.FC<GuestKeycardQrModalProps> = ({ sessio
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-stone-900 rounded-2xl max-w-lg w-full border border-stone-200 dark:border-stone-800 shadow-2xl overflow-hidden my-4">
+    <div 
+      className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="bg-white dark:bg-stone-900 rounded-2xl max-w-lg w-full border border-stone-200 dark:border-stone-800 shadow-2xl overflow-hidden my-4 animate-fade-in">
         
         {/* Top Control Header (hidden in print) */}
         <div className="p-4 bg-stone-100 dark:bg-stone-800 border-b border-stone-200 dark:border-stone-700 flex items-center justify-between print:hidden">
@@ -85,12 +96,7 @@ export const GuestKeycardQrModal: React.FC<GuestKeycardQrModalProps> = ({ sessio
               <Printer className="w-3.5 h-3.5" />
               <span>Print Slip</span>
             </button>
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-lg text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-200 dark:hover:bg-stone-700"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <ModalDismissButton onClose={onClose} ariaLabel="Close keycard modal" />
           </div>
         </div>
 

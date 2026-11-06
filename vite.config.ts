@@ -15,6 +15,9 @@ export default defineConfig(() => {
         devOptions: {
           enabled: true,
         },
+        workbox: {
+          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MiB
+        },
         manifest: {
           id: './',
           name: 'Kamal Hotel Kathmandu',
@@ -50,7 +53,7 @@ export default defineConfig(() => {
     ],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(import.meta.dirname || process.cwd(), '.'),
       },
     },
     server: {

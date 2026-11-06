@@ -54,7 +54,7 @@ export const GuestLanding: React.FC<GuestLandingProps> = ({ onOpenDashboard, onO
   const approvedReviews = reviews.filter((r) => r.isApproved);
 
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-stone-950 transition-colors">
+    <div className="min-h-screen bg-stone-50 dark:bg-stone-950 transition-colors w-full max-w-full overflow-x-hidden">
       
       {/* 1. HERO SECTION */}
       <section className="relative min-h-[620px] lg:min-h-[720px] flex items-center justify-center overflow-hidden">

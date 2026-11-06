@@ -3,6 +3,7 @@ import { useHotel } from '../../context/HotelContext';
 import { MasterInvoice, InvoiceTemplateId } from '../../types/hotel';
 import { formatCurrency, convertPrice, getThemeClasses } from '../../utils/theme';
 import { InvoicePrintModal } from './InvoicePrintModal';
+import { ModalDismissButton, useModalDismiss } from '../Common/ModalDismissHandler';
 import { 
   Receipt, 
   Settings, 
@@ -47,6 +48,9 @@ export const MasterBillingManager: React.FC = () => {
   // New Invoice Modal
   const [isNewInvoiceOpen, setIsNewInvoiceOpen] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string>(bookings[0]?.id || '');
+
+  // Enable ESC key and scroll locking
+  useModalDismiss(isNewInvoiceOpen, () => setIsNewInvoiceOpen(false));
 
   // Form state for bill settings
   const [settingsForm, setSettingsForm] = useState(billSettings);
@@ -661,11 +665,20 @@ export const MasterBillingManager: React.FC = () => {
 
       {/* Generate Bill Modal */}
       {isNewInvoiceOpen && (
-        <div className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-stone-900 rounded-xl max-w-md w-full border border-stone-200 dark:border-stone-800 p-6 space-y-4 text-xs">
-            <h4 className="font-serif font-bold text-base text-stone-900 dark:text-stone-50 border-b pb-2">
-              Generate Master Invoice from Booking
-            </h4>
+        <div 
+          className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setIsNewInvoiceOpen(false)}
+        >
+          <div 
+            className="bg-white dark:bg-stone-900 rounded-xl max-w-md w-full border border-stone-200 dark:border-stone-800 p-6 space-y-4 text-xs relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b pb-2 pr-8">
+              <h4 className="font-serif font-bold text-base text-stone-900 dark:text-stone-50">
+                Generate Master Invoice from Booking
+              </h4>
+            </div>
+            <ModalDismissButton onClick={() => setIsNewInvoiceOpen(false)} label="Close Bill Generator" />
 
             <div>
               <label className="block font-semibold mb-1">Select Confirmed Reservation</label>
@@ -684,12 +697,14 @@ export const MasterBillingManager: React.FC = () => {
 
             <div className="flex justify-end gap-2 pt-3 border-t">
               <button
+                type="button"
                 onClick={() => setIsNewInvoiceOpen(false)}
                 className="px-3.5 py-1.5 rounded border"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={() => {
                   const inv = generateInvoiceForBooking(selectedBookingId);
                   setIsNewInvoiceOpen(false);

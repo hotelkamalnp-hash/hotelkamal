@@ -16,6 +16,7 @@ import {
   RefreshCw,
   Boxes
 } from 'lucide-react';
+import { ModalDismissButton, useModalDismiss } from '../Common/ModalDismissHandler';
 
 export const InventoryStockManager: React.FC = () => {
   const { 
@@ -40,6 +41,9 @@ export const InventoryStockManager: React.FC = () => {
   const [adjustingStock, setAdjustingStock] = useState<StockItem | null>(null);
   const [adjustAmount, setAdjustAmount] = useState<number>(5);
   const [adjustReason, setAdjustReason] = useState<string>('Supplier Delivery Restock');
+
+  useModalDismiss(isAddStockOpen, () => { setIsAddStockOpen(false); setEditingStock(null); });
+  useModalDismiss(Boolean(adjustingStock), () => setAdjustingStock(null));
 
   const categories: ('All' | StockCategory)[] = [
     'All',
@@ -314,19 +318,23 @@ export const InventoryStockManager: React.FC = () => {
 
       {/* Adjust Stock Modal */}
       {adjustingStock && (
-        <div className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-stone-900 rounded-xl max-w-sm w-full border border-stone-200 dark:border-stone-800 p-5 space-y-4 text-xs">
-            <div className="flex justify-between items-center border-b pb-2">
+        <div 
+          className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setAdjustingStock(null)}
+        >
+          <div 
+            className="bg-white dark:bg-stone-900 rounded-xl max-w-sm w-full border border-stone-200 dark:border-stone-800 p-5 space-y-4 text-xs relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center border-b pb-2 pr-8">
               <div>
                 <h4 className="font-serif font-bold text-sm text-stone-900 dark:text-stone-50">
                   Update Stock Count: {adjustingStock.name}
                 </h4>
                 <p className="text-[11px] text-stone-400 font-mono">SKU: {adjustingStock.sku}</p>
               </div>
-              <button onClick={() => setAdjustingStock(null)} className="text-stone-400">
-                <XCircle className="w-4 h-4" />
-              </button>
             </div>
+            <ModalDismissButton onClick={() => setAdjustingStock(null)} label="Close Adjust Stock" />
 
             <div className="p-3 bg-stone-50 dark:bg-stone-800 rounded-lg text-center font-mono">
               <span className="text-stone-400 text-[10px] block uppercase">Current Stock Balance</span>
@@ -388,16 +396,20 @@ export const InventoryStockManager: React.FC = () => {
 
       {/* Add / Edit Stock Modal */}
       {isAddStockOpen && (
-        <div className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-stone-900 rounded-xl max-w-lg w-full border border-stone-200 dark:border-stone-800 p-6 space-y-4 text-xs max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center border-b pb-3">
+        <div 
+          className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => { setIsAddStockOpen(false); setEditingStock(null); }}
+        >
+          <div 
+            className="bg-white dark:bg-stone-900 rounded-xl max-w-lg w-full border border-stone-200 dark:border-stone-800 p-6 space-y-4 text-xs max-h-[90vh] overflow-y-auto relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center border-b pb-3 pr-8">
               <h4 className="font-serif font-bold text-base text-stone-900 dark:text-stone-50">
                 {editingStock ? 'Edit Inventory Item' : 'Add New Inventory SKU'}
               </h4>
-              <button onClick={() => setIsAddStockOpen(false)} className="text-stone-400">
-                <XCircle className="w-5 h-5" />
-              </button>
             </div>
+            <ModalDismissButton onClick={() => { setIsAddStockOpen(false); setEditingStock(null); }} label="Close Inventory Editor" />
 
             <form onSubmit={handleSaveStock} className="space-y-3">
               <div>

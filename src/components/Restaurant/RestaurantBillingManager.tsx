@@ -23,6 +23,7 @@ import {
   Star,
   DollarSign
 } from 'lucide-react';
+import { ModalDismissButton, useModalDismiss } from '../Common/ModalDismissHandler';
 
 export const RestaurantBillingManager: React.FC = () => {
   const { 
@@ -48,6 +49,8 @@ export const RestaurantBillingManager: React.FC = () => {
   // Add item modal
   const [isAddDishOpen, setIsAddDishOpen] = useState(false);
   const [editingDish, setEditingDish] = useState<MenuItem | null>(null);
+
+  useModalDismiss(isAddDishOpen, () => { setIsAddDishOpen(false); setEditingDish(null); });
 
   // POS Direct Order Cart State
   const [cart, setCart] = useState<{ item: MenuItem; quantity: number }[]>([]);
@@ -551,16 +554,20 @@ export const RestaurantBillingManager: React.FC = () => {
 
       {/* Modal to Add / Edit Dish */}
       {isAddDishOpen && (
-        <div className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-stone-900 rounded-xl max-w-md w-full border border-stone-200 dark:border-stone-800 p-6 space-y-4 text-xs">
-            <div className="flex justify-between items-center border-b pb-3">
+        <div 
+          className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => { setIsAddDishOpen(false); setEditingDish(null); }}
+        >
+          <div 
+            className="bg-white dark:bg-stone-900 rounded-xl max-w-md w-full border border-stone-200 dark:border-stone-800 p-6 space-y-4 text-xs relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center border-b pb-3 pr-8">
               <h4 className="font-serif font-bold text-base text-stone-900 dark:text-stone-50">
                 {editingDish ? 'Edit Dish Details' : 'Add New Restaurant Dish'}
               </h4>
-              <button onClick={() => setIsAddDishOpen(false)} className="text-stone-400">
-                <XCircle className="w-5 h-5" />
-              </button>
             </div>
+            <ModalDismissButton onClick={() => { setIsAddDishOpen(false); setEditingDish(null); }} label="Close Dish Editor" />
 
             <form onSubmit={handleSaveDish} className="space-y-3">
               <div>

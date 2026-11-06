@@ -37,10 +37,10 @@ import {
 } from '../services/restaurantBillingData';
 
 // Visual assets - bundled via Vite imports for GitHub Pages compatibility
-import HERO_IMAGE from '../assets/images/hero_hotel_exterior_1793848734140.jpg';
-import ROOM_DELUXE_IMAGE from '../assets/images/room_deluxe_suite_1793848735141.jpg';
-import ROOM_SUITE_IMAGE from '../assets/images/room_executive_himalayan_1793848733912.jpg';
-import AMENITY_ROOFTOP_IMAGE from '../assets/images/amenity_rooftop_dining_1793848735329.jpg';
+import HERO_IMAGE from '../assets/images/hero_himalayan_boutique_1793983309553.jpg';
+import ROOM_DELUXE_IMAGE from '../assets/images/suite_himalayan_deluxe_1793983311349.jpg';
+import ROOM_SUITE_IMAGE from '../assets/images/suite_presidential_living_1793983311442.jpg';
+import AMENITY_ROOFTOP_IMAGE from '../assets/images/rooftop_candlelight_dining_1793983310740.jpg';
 
 const INITIAL_ROOMS: Room[] = [
   {
@@ -1933,7 +1933,7 @@ export const HotelProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       code: newCp.code.trim().toUpperCase(),
     };
     setCoupons((prev) => [coupon, ...prev]);
-    addAuditLog('Created Coupon ' + coupon.code, 'rates', `Added coupon ${coupon.code} with value ${coupon.discountValue}${coupon.discountType === 'percentage' ? '%' : ' USD'}`);
+    addAuditLog('Created Coupon ' + coupon.code, 'rate', `Added coupon ${coupon.code} with value ${coupon.discountValue}${coupon.discountType === 'percentage' ? '%' : ' USD'}`);
     showToast('Coupon Created', `Promo code "${coupon.code}" is now active.`, 'success');
   };
 

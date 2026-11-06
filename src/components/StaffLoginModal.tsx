@@ -18,6 +18,7 @@ import {
   Coffee,
   Check
 } from 'lucide-react';
+import { useModalDismiss, ModalDismissButton } from './Common/ModalDismissHandler';
 
 interface StaffLoginModalProps {
   onSuccess?: () => void;
@@ -102,6 +103,11 @@ export const StaffLoginModal: React.FC<StaffLoginModalProps> = ({ onSuccess }) =
     setErrorMessage('');
   }, [loginModalTargetRole, isLoginModalOpen]);
 
+  useModalDismiss({
+    isOpen: isLoginModalOpen,
+    onClose: closeLoginModal,
+  });
+
   if (!isLoginModalOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -127,8 +133,13 @@ export const StaffLoginModal: React.FC<StaffLoginModalProps> = ({ onSuccess }) =
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-stone-950/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-stone-900 rounded-2xl max-w-md w-full border border-stone-200 dark:border-stone-800 shadow-2xl overflow-hidden my-6">
+    <div 
+      className="fixed inset-0 z-50 bg-stone-950/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) closeLoginModal();
+      }}
+    >
+      <div className="bg-white dark:bg-stone-900 rounded-2xl max-w-md w-full border border-stone-200 dark:border-stone-800 shadow-2xl overflow-hidden my-6 animate-fade-in">
         
         {/* Header */}
         <div className="p-5 bg-stone-100/80 dark:bg-stone-800/60 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between">
@@ -146,12 +157,7 @@ export const StaffLoginModal: React.FC<StaffLoginModalProps> = ({ onSuccess }) =
             </div>
           </div>
 
-          <button
-            onClick={closeLoginModal}
-            className="p-1.5 rounded-lg text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <ModalDismissButton onClose={closeLoginModal} ariaLabel="Close staff sign-in dialog" />
         </div>
 
         {/* Supabase status pill */}

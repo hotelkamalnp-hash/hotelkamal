@@ -17,6 +17,7 @@ import {
   Calendar,
   AlertCircle
 } from 'lucide-react';
+import { useModalDismiss, ModalDismissButton } from '../Common/ModalDismissHandler';
 
 export const CouponManager: React.FC = () => {
   const { 
@@ -86,6 +87,11 @@ export const CouponManager: React.FC = () => {
 
   const totalRedemptions = coupons.reduce((sum, c) => sum + c.timesUsed, 0);
   const activeCount = coupons.filter((c) => c.isActive).length;
+
+  useModalDismiss({
+    isOpen: isModalOpen,
+    onClose: () => setIsModalOpen(false),
+  });
 
   return (
     <div className="space-y-6">
@@ -232,11 +238,11 @@ export const CouponManager: React.FC = () => {
                       ? `${coupon.discountValue}% OFF`
                       : `${formatCurrency(convertPrice(coupon.discountValue, currentCurrency, themeConfig.exchangeRates), currentCurrency)} OFF`}
                   </span>
-                  {coupon.minSpendUSD > 0 && (
+                  {coupon.minSpendUSD && coupon.minSpendUSD > 0 ? (
                     <span className="text-[11px] text-stone-500 font-sans">
                       (min. {formatCurrency(convertPrice(coupon.minSpendUSD, currentCurrency, themeConfig.exchangeRates), currentCurrency)})
                     </span>
-                  )}
+                  ) : null}
                 </div>
 
                 <p className="text-xs text-stone-600 dark:text-stone-300 leading-snug">
@@ -287,8 +293,13 @@ export const CouponManager: React.FC = () => {
 
       {/* Modal for Creating Coupon */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-stone-900 rounded-2xl max-w-lg w-full p-6 border border-stone-200 dark:border-stone-800 shadow-2xl text-xs space-y-4 animate-fade-in">
+        <div 
+          className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsModalOpen(false);
+          }}
+        >
+          <div className="bg-white dark:bg-stone-900 rounded-2xl max-w-lg w-full p-6 border border-stone-200 dark:border-stone-800 shadow-2xl text-xs space-y-4 animate-fade-in my-6">
             <div className="flex items-center justify-between border-b border-stone-200 dark:border-stone-800 pb-3">
               <div className="flex items-center gap-2">
                 <Ticket className="w-5 h-5 text-amber-600" />
@@ -296,12 +307,7 @@ export const CouponManager: React.FC = () => {
                   Create Promotional Coupon
                 </h3>
               </div>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded text-stone-400 hover:text-stone-800 dark:hover:text-stone-200"
-              >
-                ✕
-              </button>
+              <ModalDismissButton onClose={() => setIsModalOpen(false)} ariaLabel="Close coupon dialog" />
             </div>
 
             <form onSubmit={handleCreateCoupon} className="space-y-4">

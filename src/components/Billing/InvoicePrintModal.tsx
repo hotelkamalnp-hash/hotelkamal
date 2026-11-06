@@ -14,6 +14,7 @@ import {
   CreditCard,
   FileText
 } from 'lucide-react';
+import { useModalDismiss, ModalDismissButton } from '../Common/ModalDismissHandler';
 
 interface InvoicePrintModalProps {
   invoice: MasterInvoice;
@@ -32,6 +33,11 @@ export const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
 }) => {
   const printAreaRef = useRef<HTMLDivElement>(null);
 
+  useModalDismiss({
+    isOpen: true,
+    onClose,
+  });
+
   const handlePrint = () => {
     window.print();
   };
@@ -39,8 +45,13 @@ export const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
   const template = billSettings.template;
 
   return (
-    <div className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-stone-900 rounded-2xl max-w-4xl w-full border border-stone-200 dark:border-stone-800 shadow-2xl overflow-hidden my-4 sm:my-8 flex flex-col max-h-[92vh]">
+    <div 
+      className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="bg-white dark:bg-stone-900 rounded-2xl max-w-4xl w-full border border-stone-200 dark:border-stone-800 shadow-2xl overflow-hidden my-4 sm:my-8 flex flex-col max-h-[92vh] animate-fade-in">
         
         {/* Modal Top Control Bar (Hidden during actual print) */}
         <div className="p-4 bg-stone-100 dark:bg-stone-800 border-b border-stone-200 dark:border-stone-700 flex items-center justify-between print:hidden">
@@ -75,12 +86,7 @@ export const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
               <span>Print / Save PDF</span>
             </button>
 
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-lg text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-200 dark:hover:bg-stone-700"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <ModalDismissButton onClose={onClose} ariaLabel="Close bill preview" />
           </div>
         </div>
 

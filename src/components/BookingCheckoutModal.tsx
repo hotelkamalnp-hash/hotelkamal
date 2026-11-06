@@ -18,8 +18,11 @@ import {
   ChevronLeft, 
   Smartphone,
   MapPin,
-  Coins
+  Coins,
+  Tag,
+  Ticket
 } from 'lucide-react';
+import { useModalDismiss, ModalDismissButton } from './Common/ModalDismissHandler';
 
 const AVAILABLE_ADDONS: BookingAddon[] = [
   {
@@ -58,9 +61,12 @@ export const BookingCheckoutModal: React.FC = () => {
     closeBookingModal, 
     selectedRoomForBooking, 
     themeConfig, 
-    currentCurrency,
-    setCurrentCurrency,
-    createBooking 
+    currentCurrency, 
+    setCurrentCurrency, 
+    createBooking,
+    validateAndApplyCoupon,
+    redeemCoupon,
+    showToast
   } = useHotel();
 
   const themeClasses = getThemeClasses(themeConfig.palette);
@@ -91,6 +97,15 @@ export const BookingCheckoutModal: React.FC = () => {
   // Addons State
   const [addons, setAddons] = useState<BookingAddon[]>(AVAILABLE_ADDONS);
 
+  // Coupon State
+  const [couponInput, setCouponInput] = useState<string>('');
+  const [appliedCouponData, setAppliedCouponData] = useState<{
+    code: string;
+    discountUSD: number;
+    description: string;
+  } | null>(null);
+  const [couponError, setCouponError] = useState<string>('');
+
   // Payment Form State
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
   const [cardNumber, setCardNumber] = useState<string>('4242 •••• •••• 4242');
@@ -101,6 +116,11 @@ export const BookingCheckoutModal: React.FC = () => {
 
   // Confirmed booking state
   const [confirmedBookingCode, setConfirmedBookingCode] = useState<string>('');
+
+  useModalDismiss({
+    isOpen: isBookingModalOpen && Boolean(selectedRoomForBooking),
+    onClose: closeBookingModal,
+  });
 
   if (!isBookingModalOpen || !selectedRoomForBooking) {
     return null;
@@ -123,10 +143,52 @@ export const BookingCheckoutModal: React.FC = () => {
     return sum + itemPriceInCurrency;
   }, 0);
 
-  const subtotal = roomSubtotal + addonsSubtotal;
+  // Base USD subtotal for coupon logic
+  const roomSubtotalUSD = (room.pricePerNightUSD * surgeMultiplier) * nights;
+  const addonsSubtotalUSD = selectedAddons.reduce((sum, item) => {
+    if (item.id === 'addon-breakfast') {
+      return sum + item.priceUSD * nights * adults;
+    }
+    return sum + item.priceUSD;
+  }, 0);
+  const rawSubtotalUSD = roomSubtotalUSD + addonsSubtotalUSD;
+
+  const rawSubtotal = roomSubtotal + addonsSubtotal;
+
+  // Coupon discount calculation
+  const couponDiscountInCurrency = appliedCouponData 
+    ? convertPrice(appliedCouponData.discountUSD, currentCurrency, themeConfig.exchangeRates)
+    : 0;
+
+  const discountedSubtotal = Math.max(0, rawSubtotal - couponDiscountInCurrency);
   const taxRate = (themeConfig.taxRatePercent || 13) / 100;
-  const taxAmount = Number((subtotal * taxRate).toFixed(2));
-  const grandTotal = Number((subtotal + taxAmount).toFixed(2));
+  const taxAmount = Number((discountedSubtotal * taxRate).toFixed(2));
+  const grandTotal = Number((discountedSubtotal + taxAmount).toFixed(2));
+
+  const handleApplyCoupon = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setCouponError('');
+    if (!couponInput.trim()) return;
+
+    const res = validateAndApplyCoupon(couponInput.trim(), rawSubtotalUSD, 'rooms');
+    if (res.valid && res.coupon) {
+      setAppliedCouponData({
+        code: res.coupon.code,
+        discountUSD: res.discountAmountUSD,
+        description: res.coupon.description,
+      });
+      showToast('Coupon Applied!', `Saved $${res.discountAmountUSD.toFixed(2)} with code ${res.coupon.code}`, 'success');
+    } else {
+      setCouponError(res.message);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCouponData(null);
+    setCouponInput('');
+    setCouponError('');
+    showToast('Coupon Removed', 'Standard booking rate restored.', 'info');
+  };
 
   const toggleAddon = (id: string) => {
     setAddons((prev) =>
@@ -159,7 +221,7 @@ export const BookingCheckoutModal: React.FC = () => {
         adults,
         children,
         addons: selectedAddons,
-        subtotal,
+        subtotal: discountedSubtotal,
         taxAmount,
         totalAmount: grandTotal,
         currency: currentCurrency,
@@ -167,8 +229,14 @@ export const BookingCheckoutModal: React.FC = () => {
         paymentMethod,
         cardLast4: paymentMethod === 'card' ? cardNumber.slice(-4).replace(/\s/g, '') || '4242' : undefined,
         bookingStatus: 'confirmed',
-        specialRequests,
+        specialRequests: appliedCouponData 
+          ? `${specialRequests ? specialRequests + ' | ' : ''}Promo applied: ${appliedCouponData.code} (-$${appliedCouponData.discountUSD.toFixed(2)})`
+          : specialRequests,
       });
+
+      if (appliedCouponData) {
+        redeemCoupon(appliedCouponData.code);
+      }
 
       setConfirmedBookingCode(created.bookingCode);
       setIsProcessing(false);
@@ -181,8 +249,13 @@ export const BookingCheckoutModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-stone-950/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-      <div className="bg-white dark:bg-stone-900 rounded-2xl max-w-4xl w-full border border-stone-200 dark:border-stone-800 shadow-2xl overflow-hidden my-6">
+    <div 
+      className="fixed inset-0 z-50 bg-stone-950/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) closeBookingModal();
+      }}
+    >
+      <div className="bg-white dark:bg-stone-900 rounded-2xl max-w-4xl w-full border border-stone-200 dark:border-stone-800 shadow-2xl overflow-hidden my-6 animate-fade-in">
         
         {/* Modal Header */}
         <div className="px-6 py-4 bg-stone-100/80 dark:bg-stone-800/60 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between">
@@ -214,12 +287,7 @@ export const BookingCheckoutModal: React.FC = () => {
               ))}
             </div>
 
-            <button
-              onClick={closeBookingModal}
-              className="p-1.5 rounded-lg text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <ModalDismissButton onClose={closeBookingModal} ariaLabel="Close booking modal" />
           </div>
         </div>
 
@@ -460,6 +528,67 @@ export const BookingCheckoutModal: React.FC = () => {
                         </span>
                       </div>
                     )}
+
+                    {/* Promo Code Input & Applied Voucher */}
+                    <div className="pt-2 pb-1 border-t border-stone-200 dark:border-stone-700">
+                      {appliedCouponData ? (
+                        <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-1.5 text-emerald-800 dark:text-emerald-300 font-medium">
+                            <Tag className="w-3.5 h-3.5" />
+                            <span>Voucher: {appliedCouponData.code}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-emerald-700 dark:text-emerald-400 font-mono">
+                              -{formatCurrency(couponDiscountInCurrency, currentCurrency)}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={handleRemoveCoupon}
+                              className="text-stone-400 hover:text-rose-600 font-bold px-1"
+                              title="Remove coupon"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-1.5">
+                          <div className="flex gap-1.5">
+                            <input
+                              type="text"
+                              placeholder="Promo / Voucher Code"
+                              value={couponInput}
+                              onChange={(e) => {
+                                setCouponInput(e.target.value.toUpperCase());
+                                setCouponError('');
+                              }}
+                              className="flex-1 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded px-2.5 py-1.5 text-xs font-mono uppercase tracking-wider text-stone-900 dark:text-stone-100"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleApplyCoupon()}
+                              className="px-3 py-1.5 rounded bg-stone-800 hover:bg-stone-900 text-white font-semibold text-xs transition cursor-pointer"
+                            >
+                              Apply
+                            </button>
+                          </div>
+                          {couponError && (
+                            <p className="text-[11px] text-rose-600 font-medium">{couponError}</p>
+                          )}
+                          <p className="text-[10px] text-stone-400">
+                            Try: <span className="font-mono font-bold text-stone-600 dark:text-stone-300">WELCOME2026</span> (15% off) or <span className="font-mono font-bold text-stone-600 dark:text-stone-300">HIMALAYANVIP</span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {appliedCouponData && (
+                      <div className="flex justify-between text-emerald-700 dark:text-emerald-400 font-semibold">
+                        <span>Coupon Savings ({appliedCouponData.code}):</span>
+                        <span className="tabular-nums">-{formatCurrency(couponDiscountInCurrency, currentCurrency)}</span>
+                      </div>
+                    )}
+
                     <div className="flex justify-between">
                       <span className="text-stone-500">VAT & Taxes ({themeConfig.taxRatePercent}%):</span>
                       <span className="font-medium text-stone-900 dark:text-stone-100 tabular-nums">

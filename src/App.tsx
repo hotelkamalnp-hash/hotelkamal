@@ -9,17 +9,18 @@ import { CSRWidget } from './components/CSRWidget';
 import { ToastContainer } from './components/ToastContainer';
 
 import { InRoomGuestPortal } from './components/GuestPortal/InRoomGuestPortal';
+import { MobileBottomNav } from './components/MobileBottomNav';
 
 function HotelAppContent() {
   const [currentView, setCurrentView] = useState<'guest' | 'dashboard' | 'in_room_guest'>('guest');
 
   return (
-    <div className="min-h-screen flex flex-col bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100 transition-colors">
+    <div className="min-h-screen flex flex-col bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100 transition-colors w-full max-w-full overflow-x-hidden">
       {/* 3-Zone Top Navigation Header */}
       <Header currentView={currentView} setCurrentView={setCurrentView} />
 
-      {/* Main View Router */}
-      <main className="flex-1">
+      {/* Main View Router with responsive mobile padding */}
+      <main className="flex-1 pb-20 md:pb-0">
         {currentView === 'guest' ? (
           <GuestLanding 
             onOpenDashboard={() => setCurrentView('dashboard')} 
@@ -31,6 +32,9 @@ function HotelAppContent() {
           <StaffDashboard />
         )}
       </main>
+
+      {/* Mobile Fixed Bottom Navigation Bar (hidden on desktop/laptop) */}
+      <MobileBottomNav currentView={currentView} setCurrentView={setCurrentView} />
 
       {/* Real-time Secure Booking & Checkout Modal */}
       <BookingCheckoutModal />
